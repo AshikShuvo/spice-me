@@ -22,15 +22,6 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
         <ol>
           <li>
             Get started by editing <code>apps/web/app/page.tsx</code>
@@ -45,13 +36,7 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
+           
             Deploy now
           </a>
           <a
@@ -63,9 +48,13 @@ export default function Home() {
             Read our docs
           </a>
         </div>
-        <Button appName="web" className={styles.secondary}>
+        <Button
+          appName="web"
+          className="rounded-full bg-blue-1000 px-5 py-3 text-sm font-medium text-white transition hover:bg-purple-1000"
+        >
           Open alert
         </Button>
+        <p className="display-1 bg-blue-1000">hello world</p>
       </main>
       <footer className={styles.footer}>
         <a
@@ -73,13 +62,6 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
           Examples
         </a>
         <a
@@ -87,13 +69,6 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
           Go to turborepo.dev →
         </a>
       </footer>
