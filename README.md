@@ -10,6 +10,17 @@ Run the following command:
 npx create-turbo@latest
 ```
 
+### Bun workspace note
+
+When adding local packages in this monorepo with Bun, use the `workspace:*` protocol so Bun links the local package instead of querying npm:
+
+```sh
+cd apps/web
+bun install @repo/ui@workspace:* @repo/tailwind-config@workspace:* --dev
+```
+
+After that, a normal `bun install` works as expected.
+
 ## What's inside?
 
 This Turborepo includes the following packages/apps:
