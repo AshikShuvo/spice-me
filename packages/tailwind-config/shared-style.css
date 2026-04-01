@@ -1,7 +1,42 @@
 @import "tailwindcss";
 
 @theme {
+  /* ─── Typography ─────────────────────────────────────────────────── */
+  --font-ringside-compressed: "Ringside Compressed", ui-sans-serif, system-ui, sans-serif;
+  --font-ringside-narrow: "Ringside Narrow", ui-sans-serif, system-ui, sans-serif;
+
+  /* ─── Legacy generic tokens ──────────────────────────────────────── */
   --color-blue-1000: #2a8af6;
   --color-purple-1000: #a853ba;
   --color-red-1000: #e92a67;
+
+  /* ─── Peppes Red — primary brand color ───────────────────────────── */
+  --color-peppes-red: #cd1719;
+  --color-peppes-red-80: rgba(205, 23, 26, 0.8);
+  --color-peppes-red-60: rgba(205, 23, 26, 0.6);
+  --color-peppes-red-40: rgba(205, 23, 26, 0.4);
+  --color-peppes-red-20: rgba(205, 23, 26, 0.2);
+  --color-peppes-red-10: rgba(205, 23, 26, 0.1);
+
+  /* ─── Glowing Red — accent / hover state ─────────────────────────── */
+  --color-glowing-red: #ee1d25;
+  --color-glowing-red-80: rgba(238, 29, 37, 0.8);
+  --color-glowing-red-60: rgba(238, 29, 37, 0.6);
+  --color-glowing-red-40: rgba(238, 29, 37, 0.4);
+  --color-glowing-red-20: rgba(238, 29, 37, 0.2);
+  --color-glowing-red-10: rgba(238, 29, 37, 0.1);
+
+  /* ─── Coal — primary dark / text ─────────────────────────────────── */
+  --color-coal: #323232;
+  --color-coal-80: rgba(50, 50, 50, 0.8);
+  --color-coal-60: rgba(50, 50, 50, 0.6);
+  --color-coal-20: rgba(50, 50, 50, 0.2);
+  --color-coal-10: rgba(50, 50, 50, 0.05);
+
+  /* ─── Neutrals / backgrounds ─────────────────────────────────────── */
+  --color-light-bg: #fffdf9;
+  --color-lyserosa: #f8f6f1;   /* Peppes Lyserosa = Neutral-90 */
+  --color-neutral-95: #fcf1f1; /* secondary-main-95 */
+  --color-neutral-20: #33322f;
+  --color-neutral-30: #565551;
 }
