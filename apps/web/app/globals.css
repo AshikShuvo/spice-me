@@ -3,14 +3,61 @@
 @import "./typography.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fffdf9;
+  --foreground: #33322f;
+
+  /* ─── Peppes Red aliases ──────────────────────────────────────────── */
+  --Peppes-Red: var(--color-peppes-red);
+  --peppes-80: var(--color-peppes-red-80);
+  --peppes-60: var(--color-peppes-red-60);
+  --peppes-40: var(--color-peppes-red-40);
+  --peppes-20: var(--color-peppes-red-20);
+  --peppes-10: var(--color-peppes-red-10);
+
+  /* Red-black blend aliases — same value as regular opacity variants */
+  --peppes-red-20-black: var(--color-peppes-red-80);
+  --peppes-red-40-black: var(--color-peppes-red-60);
+  --peppes-red-60-black: var(--color-peppes-red-40);
+  --peppes-red-80-black: var(--color-peppes-red-20);
+
+  /* ─── Glowing Red aliases ─────────────────────────────────────────── */
+  --Glowing-Red: var(--color-glowing-red);
+  --glowing-red-80: var(--color-glowing-red-80);
+  --glowing-red-60: var(--color-glowing-red-60);
+  --glowing-red-40: var(--color-glowing-red-40);
+  --glowing-red-20: var(--color-glowing-red-20);
+  --glowing-red-10: var(--color-glowing-red-10);
+
+  /* ─── Coal aliases ────────────────────────────────────────────────── */
+  --Coal: var(--color-coal);
+  --coal-80: var(--color-coal-80);
+  --coal-60: var(--color-coal-60);
+  --Invisible-White: var(--color-coal-20);
+  --coal-10: var(--color-coal-10);
+
+  /* ─── Neutral / background aliases ───────────────────────────────── */
+  --Light-BG: var(--color-light-bg);
+  --Pure-Black: #000;
+  --White: #fff;
+  --Peppes-Lyserosa: var(--color-lyserosa);
+  --Neutral-neutral90: var(--color-lyserosa);
+  --secondary-secondary-main-95: var(--color-neutral-95);
+  --Neutral-Black---neutral0: #000;
+  --Neutral-neutral20: var(--color-neutral-20);
+  --Neutral-neutral30: var(--color-neutral-30);
+  --primary-primary-main-40: var(--color-peppes-red);
+
+  /* ─── PrimeVue component tokens ───────────────────────────────────── */
+  --p-progressspinner-color-one: var(--color-peppes-red-40);
+  --p-progressspinner-color-two: var(--color-peppes-red-40);
+  --p-progressspinner-color-three: var(--color-peppes-red-40);
+  --p-progressspinner-color-four: var(--color-peppes-red-40);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1a1816;
+    --foreground: #f8f6f1;
   }
 }
 

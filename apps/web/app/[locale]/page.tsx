@@ -1,6 +1,7 @@
 import { Button } from "@repo/ui/button";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { Link } from "@/i18n/navigation";
 import styles from "./page.module.css";
 
 export function generateStaticParams() {
@@ -54,6 +55,13 @@ export default async function Home({ params }: Props) {
           {tHome("open_alert")}
         </Button>
         <p className="text-body text-info">{tHome("hello_world")}</p>
+
+        <Link
+          href="/design-guide"
+          className="inline-flex items-center gap-2 text-label text-peppes-red hover:text-glowing-red transition-colors"
+        >
+          Design Guide →
+        </Link>
       </main>
       <footer className={styles.footer}>
         <a
