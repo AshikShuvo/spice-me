@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@repo/tailwind-config";
+@import "./typography.css";
 
 :root {
   --background: #ffffff;

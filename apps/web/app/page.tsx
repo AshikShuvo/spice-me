@@ -23,7 +23,7 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <ol>
-          <li>
+          <li className="text-title">
             Get started by editing <code>apps/web/app/page.tsx</code>
           </li>
           <li>Save and see your changes instantly.</li>
