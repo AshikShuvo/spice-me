@@ -1,0 +1,46 @@
+---
+description: Feature context protocol — agents must read context files before working on a feature and update them after completing work
+alwaysApply: true
+---
+
+# Feature Context Protocol
+
+## Before Starting Any Task
+
+1. **Read architecture overview first:**
+   `.cursor/context/architecture.md`
+
+2. **Check if a feature context file exists** for what you are working on:
+   `.cursor/context/features/<feature-name>.md`
+
+   - If it exists → read it in full before touching any code.
+   - If it does not exist → create it using `.cursor/context/features/_template.md` before writing code.
+
+3. Use the context to skip redundant file exploration. Trust the key-files list and API contract documented there.
+
+## After Completing a Task
+
+Update the relevant context file(s) to reflect the current reality:
+
+- Add or update **Key Files** if you created or renamed files.
+- Update the **API Contract** if endpoints/actions changed.
+- Update the **Data Model** if the Prisma schema changed.
+- Add any **Gotchas** you discovered.
+- Change **Status** from `planned` → `in-progress` → `complete`.
+- Update the **Feature Index** table in `architecture.md` if a new feature was added.
+
+## Context File Location
+
+```
+.cursor/context/
+  architecture.md            ← always read first
+  features/
+    _template.md             ← copy this to create new feature files
+    <feature-name>.md        ← one file per feature
+```
+
+## Why This Exists
+
+Reading a 50-line context file costs ~200 tokens. Re-exploring the codebase from scratch costs 5,000–20,000 tokens. Always prefer the context file.
+
+If the context file is stale or missing, fix it as part of your work — do not skip it.

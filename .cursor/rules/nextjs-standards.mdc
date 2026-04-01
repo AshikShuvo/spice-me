@@ -1,0 +1,65 @@
+---
+description: Next.js App Router coding standards and UI conventions for apps/web
+globs: apps/web/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Next.js Standards — `apps/web`
+
+## App Router Conventions
+- **Default to Server Components**. Add `"use client"` only when needed (hooks, browser APIs, event handlers).
+- File-based routing lives in `app/`. Use `layout.tsx`, `page.tsx`, `loading.tsx`, `error.tsx` per segment.
+- Fetch data directly in Server Components — no `useEffect` for data loading.
+- Use **Server Actions** for mutations instead of separate API route handlers.
+
+```tsx
+// ✅ Server Component with direct data fetch
+export default async function UsersPage() {
+  const users = await getUsers()  // direct DB/API call, no useEffect
+  return <UserList users={users} />
+}
+```
+
+```tsx
+// ✅ Client Component — only when needed
+"use client"
+export function SearchInput({ onSearch }: { onSearch: (q: string) => void }) {
+  return <input onChange={(e) => onSearch(e.target.value)} />
+}
+```
+
+## TailwindCSS (v4)
+- Use Tailwind utility classes exclusively — no inline `style={{}}`, no CSS Modules for new code.
+- Design mobile-first: base styles for mobile, `sm:` / `md:` / `lg:` for larger screens.
+- Use `@repo/tailwind-config` shared styles; import `@repo/ui/styles.css` in the root `layout.tsx`.
+- Group related utilities: layout → spacing → typography → color → interaction.
+
+```tsx
+// ✅
+<button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+  Save
+</button>
+```
+
+## Components
+- Shared, reusable components belong in `packages/ui` (imported as `@repo/ui`), not in `apps/web`.
+- Page-specific components live co-located inside their route segment folder.
+- Use semantic HTML: `<main>`, `<section>`, `<nav>`, `<header>`, `<footer>`, `<article>`.
+- Every interactive element must be keyboard-accessible and have an accessible label.
+
+## TypeScript
+- Extends `@repo/typescript-config/nextjs.json` — `strict`, `noEmit`, bundler module resolution.
+- Run `next typegen` before `tsc --noEmit` (already in `check-types` script).
+- Explicitly type all `props` interfaces; avoid `React.FC<>` — prefer plain function signatures.
+
+```tsx
+// ✅
+interface UserCardProps {
+  user: { id: string; name: string; email: string }
+}
+export function UserCard({ user }: UserCardProps) { ... }
+```
+
+## Dev Server
+- Runs on **port 3003** (`bun dev` from repo root or `apps/web`).
+- Environment variables are loaded from `.env` files; prefix public vars with `NEXT_PUBLIC_`.

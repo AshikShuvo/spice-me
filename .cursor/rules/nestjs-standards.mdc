@@ -1,0 +1,71 @@
+---
+description: NestJS coding standards and architecture conventions for apps/api
+globs: apps/api/**/*.ts
+alwaysApply: false
+---
+
+# NestJS Standards — `apps/api`
+
+## Architecture
+- One module per domain feature. Never put business logic in `AppModule`.
+- Layer order: **Controller → Service → (Repository/Prisma)**. Controllers handle HTTP only; services own all logic.
+- Inject dependencies via constructor — never `new MyService()`.
+- Bootstrap port from `process.env.PORT ?? 3001` (already set in `main.ts`).
+
+## Modules
+```ts
+// ✅ Feature module structure
+@Module({
+  imports: [TypeOrmModule.forFeature([User])],
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+```
+
+## DTOs & Validation
+- Every controller input must be a DTO decorated with `class-validator`.
+- Enable `ValidationPipe` globally in `main.ts` with `whitelist: true, forbidNonWhitelisted: true`.
+
+```ts
+export class CreateUserDto {
+  @IsEmail()
+  email: string
+
+  @IsString()
+  @MinLength(2)
+  name: string
+}
+```
+
+## Error Handling
+- Throw NestJS built-in exceptions (`NotFoundException`, `BadRequestException`, etc.) from services.
+- Never throw plain `Error` objects in controllers or services.
+
+```ts
+// ✅
+const user = await this.usersService.findOne(id)
+if (!user) throw new NotFoundException(`User ${id} not found`)
+```
+
+## TypeScript
+- `experimentalDecorators` and `emitDecoratorMetadata` are enabled — required for NestJS decorators.
+- Never use `any`; use `unknown` and narrow with type guards.
+- All async functions must return typed `Promise<T>`.
+
+## File Naming
+```
+users/
+  users.module.ts
+  users.controller.ts
+  users.service.ts
+  dto/create-user.dto.ts
+  dto/update-user.dto.ts
+  entities/user.entity.ts
+```
+
+## Testing
+- Unit tests live alongside source files (`*.spec.ts`).
+- E2E tests live in `apps/test/` (`*.e2e-spec.ts`).
+- Mock all external dependencies in unit tests using `jest.fn()` or NestJS `createMock`.

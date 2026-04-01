@@ -1,0 +1,73 @@
+---
+description: Monorepo structure, workspace, and Turborepo conventions for spice-me
+alwaysApply: true
+---
+
+# Monorepo Standards — `spice-me`
+
+## Workspace Layout
+```
+spice-me/
+  apps/
+    api/        # NestJS backend  (package name: api,  port 3001)
+    web/        # Next.js frontend (package name: web,  port 3003)
+  packages/
+    ui/                  # @repo/ui       — shared React components + styles
+    tailwind-config/     # @repo/tailwind-config — shared Tailwind/PostCSS config
+    typescript-config/   # @repo/typescript-config — tsconfig presets
+    eslint-config/       # @repo/eslint-config — ESLint presets
+```
+
+## Package Manager — Bun
+- **Always use `bun`** to add dependencies, run scripts, and manage the lockfile (`bun.lock`).
+- Install workspace deps with `bun add <pkg> --filter <workspace-name>`.
+- Never commit `pnpm-lock.yaml` or `package-lock.json` at the root.
+
+```bash
+# ✅ Add a dep to the web app only
+bun add zod --filter web
+
+# ✅ Add a shared dev dep to root
+bun add -d prettier -w
+```
+
+## Turborepo Tasks
+Defined in `turbo.json`. All tasks fan-out via `turbo <task>` from the root:
+
+| Task | Behavior |
+|------|----------|
+| `dev` | Persistent, no cache — runs all apps in watch mode |
+| `build` | Cached; outputs `dist/**` and `.next/**` |
+| `lint` | Cached; depends on upstream `^lint` |
+| `check-types` | Cached; depends on upstream `^check-types` |
+
+- Run a single workspace task: `bun turbo dev --filter=web`
+- Never run `next build` or `nest build` directly — always go through `turbo`.
+
+## Shared Packages — Rules
+- **Code shared across apps** → add to `packages/ui` or create a new package under `packages/`.
+- **App-specific code never goes into `packages/`**.
+- Reference workspace packages using the `@repo/` scope (e.g. `@repo/ui`, `@repo/tailwind-config`).
+- Every new package must have: `package.json` with correct `name`, `exports`, and `main`/`types` fields.
+
+## TypeScript Config Inheritance
+```
+packages/typescript-config/
+  base.json          ← foundation (strict, ES2022, NodeNext)
+  nextjs.json        ← extends base — used by apps/web + packages/ui
+  react-library.json ← extends base — used by packages/ui components
+```
+- `apps/api` uses its own `tsconfig.json` (NestJS requires `experimentalDecorators`).
+- New packages must extend one of the `@repo/typescript-config` presets.
+
+## Adding a New App or Package
+1. Create the folder under `apps/` or `packages/`.
+2. Add `package.json` with a unique `name` (use `@repo/` scope for packages).
+3. Extend the appropriate `@repo/typescript-config` preset.
+4. Use `@repo/eslint-config` for linting.
+5. Turborepo picks it up automatically via `workspaces: ["apps/*", "packages/*"]`.
+
+## What NOT to Do
+- Do not install dependencies at the root unless they are shared devDependencies (e.g. `prettier`, `turbo`, `typescript`).
+- Do not duplicate config files (tsconfig, eslint, postcss) — extend from the shared packages.
+- Do not hard-code ports — read from `process.env.PORT` with a fallback.
