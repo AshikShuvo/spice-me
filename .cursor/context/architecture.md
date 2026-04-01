@@ -36,6 +36,7 @@ spice-me/
 | Feature | Status | Context File |
 |---------|--------|-------------|
 | i18n (`en`, `no`, prefix routes) | complete | [.cursor/context/features/i18n.md](features/i18n.md) |
+| Backend setup (Swagger, Prisma, config, validation) | complete | [.cursor/context/features/backend-setup.md](features/backend-setup.md) |
 
 ## Shared Conventions
 - Bun for all installs; `bun add <pkg> --filter <workspace>`
