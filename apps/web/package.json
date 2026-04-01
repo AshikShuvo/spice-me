@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3003",
+    "dev": "next dev --port 3003 --webpack",
+    "dev:turbo": "next dev --port 3003",
     "build": "next build",
     "start": "next start",
     "lint": "eslint --max-warnings 0",
@@ -15,6 +16,7 @@
     "@tailwindcss/postcss": "^4.2.2",
     "@tailwindcss/vite": "^4.2.2",
     "next": "16.2.0",
+    "next-intl": "^4.8.4",
     "postcss": "^8.5.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

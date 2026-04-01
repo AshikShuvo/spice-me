@@ -35,7 +35,7 @@ spice-me/
 <!-- Add a row for every feature as it is built. Link to the context file. -->
 | Feature | Status | Context File |
 |---------|--------|-------------|
-| _(none yet)_ | — | — |
+| i18n (`en`, `no`, prefix routes) | complete | [.cursor/context/features/i18n.md](features/i18n.md) |
 
 ## Shared Conventions
 - Bun for all installs; `bun add <pkg> --filter <workspace>`

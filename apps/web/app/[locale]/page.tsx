@@ -1,32 +1,32 @@
-import Image, { type ImageProps } from "next/image";
 import { Button } from "@repo/ui/button";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { routing } from "@/i18n/routing";
 import styles from "./page.module.css";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+type Props = {
+  params: Promise<{ locale: string }>;
 };
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
+export default async function Home({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
 
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+  const tHome = await getTranslations("home");
+  const tFooter = await getTranslations("footer");
 
-export default function Home() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
         <ol>
           <li className="text-title">
-            Get started by editing <code>apps/web/app/page.tsx</code>
+            {tHome("get_started")}{" "}
+            <code>{tHome("edit_file_hint")}</code>
           </li>
-          <li>Save and see your changes instantly.</li>
+          <li>{tHome("save_instant")}</li>
         </ol>
 
         <div className={styles.ctas}>
@@ -36,8 +36,7 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
           >
-           
-            Deploy now
+            {tHome("deploy")}
           </a>
           <a
             href="https://turborepo.dev/docs?utm_source"
@@ -45,16 +44,16 @@ export default function Home() {
             rel="noopener noreferrer"
             className={styles.secondary}
           >
-            Read our docs
+            {tHome("docs")}
           </a>
         </div>
         <Button
           appName="web"
           className="rounded-full bg-blue-1000 px-5 py-3 text-sm font-medium text-white transition hover:bg-purple-1000"
         >
-          Open alert
+          {tHome("open_alert")}
         </Button>
-        <p className="display-1 bg-blue-1000">hello world</p>
+        <p className="text-body text-info">{tHome("hello_world")}</p>
       </main>
       <footer className={styles.footer}>
         <a
@@ -62,14 +61,14 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Examples
+          {tFooter("examples")}
         </a>
         <a
           href="https://turborepo.dev?utm_source=create-turbo"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Go to turborepo.dev →
+          {tFooter("turborepo_link")}
         </a>
       </footer>
     </div>

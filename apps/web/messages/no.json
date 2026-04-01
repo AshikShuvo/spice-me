@@ -1,0 +1,19 @@
+{
+  "home": {
+    "get_started": "Kom i gang ved å redigere",
+    "edit_file_hint": "apps/web/app/[locale]/page.tsx",
+    "save_instant": "Lagre og se endringene dine med en gang.",
+    "deploy": "Distribuer nå",
+    "docs": "Les dokumentasjonen vår",
+    "open_alert": "Åpne varsel",
+    "hello_world": "hei verden"
+  },
+  "footer": {
+    "examples": "Eksempler",
+    "turborepo_link": "Gå til turborepo.dev →"
+  },
+  "common": {
+    "loading": "Laster...",
+    "error": "Noe gikk galt"
+  }
+}
