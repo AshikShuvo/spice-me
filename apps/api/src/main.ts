@@ -24,6 +24,10 @@ async function bootstrap() {
     .setTitle('spice-me API')
     .setDescription('REST API for spice-me')
     .setVersion('1.0')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'access-token',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);

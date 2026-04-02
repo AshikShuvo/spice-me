@@ -4,11 +4,11 @@
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "setupFilesAfterEnv": ["<rootDir>/jest-e2e.setup.ts"],
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "useESM": true }]
   },
   "moduleNameMapper": {
-    "^.*generated/prisma/client(\\.js)?$": "<rootDir>/mocks/prisma-client.ts",
     "^(\\.{1,2}/.*)\\.js$": "$1"
   }
 }

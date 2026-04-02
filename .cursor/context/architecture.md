@@ -37,6 +37,7 @@ spice-me/
 |---------|--------|-------------|
 | i18n (`en`, `no`, prefix routes) | complete | [.cursor/context/features/i18n.md](features/i18n.md) |
 | Backend setup (Swagger, Prisma, config, validation) | complete | [.cursor/context/features/backend-setup.md](features/backend-setup.md) |
+| Auth & user management (JWT, roles, users API) | complete | [.cursor/context/features/auth-user-management.md](features/auth-user-management.md) |
 
 ## Shared Conventions
 - Bun for all installs; `bun add <pkg> --filter <workspace>`
@@ -49,8 +50,8 @@ spice-me/
 <!-- Document things that affect every feature: auth, error handling, logging, etc. -->
 
 ### Authentication
-<!-- Describe the auth strategy once it is implemented. -->
-_Not yet implemented._
+- **API:** JWT access token (Bearer, 15m) + refresh token (body field, 7d), bcrypt password hashing, refresh token stored hashed in DB. Roles: `ADMIN`, `USER`. See [auth-user-management.md](features/auth-user-management.md).
+- **Web:** not integrated yet — use that context file for frontend work.
 
 ### Error Handling
 - NestJS: throw built-in HTTP exceptions (`NotFoundException`, etc.) in services
@@ -61,4 +62,6 @@ _Not yet implemented._
 |----------|---------|---------|
 | `PORT` | api | NestJS listen port (fallback 3001) |
 | `DATABASE_URL` | api | PostgreSQL connection string |
+| `JWT_SECRET` | api | Signs access JWTs |
+| `JWT_REFRESH_SECRET` | api | Signs refresh JWTs (must differ from `JWT_SECRET`) |
 | `NEXT_PUBLIC_API_URL` | web | Base URL for NestJS API calls |
