@@ -11,7 +11,12 @@
         "DATABASE_URL",
         "NODE_ENV",
         "JWT_SECRET",
-        "JWT_REFRESH_SECRET"
+        "JWT_REFRESH_SECRET",
+        "NEXTAUTH_SECRET",
+        "AUTH_SECRET",
+        "NEXTAUTH_URL",
+        "NEXT_PUBLIC_API_URL",
+        "CORS_ORIGINS"
       ]
     },
     "lint": {
@@ -28,7 +33,12 @@
         "DATABASE_URL",
         "NODE_ENV",
         "JWT_SECRET",
-        "JWT_REFRESH_SECRET"
+        "JWT_REFRESH_SECRET",
+        "NEXTAUTH_SECRET",
+        "AUTH_SECRET",
+        "NEXTAUTH_URL",
+        "NEXT_PUBLIC_API_URL",
+        "CORS_ORIGINS"
       ]
     }
   }

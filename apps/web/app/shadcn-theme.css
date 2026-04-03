@@ -1,0 +1,27 @@
+/* shadcn semantic tokens — Peppes palette (see globals.css :root for --ui-button-* overrides) */
+@theme inline {
+  --radius-sm: calc(0.625rem - 4px);
+  --radius-md: calc(0.625rem - 2px);
+  --radius-lg: 0.625rem;
+  --radius-xl: calc(0.625rem + 4px);
+  --color-background: var(--color-light-bg);
+  --color-foreground: var(--color-coal);
+  --color-card: var(--color-light-bg);
+  --color-card-foreground: var(--color-coal);
+  --color-popover: var(--color-light-bg);
+  --color-popover-foreground: var(--color-coal);
+  --color-primary: var(--color-peppes-red);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--color-lyserosa);
+  --color-secondary-foreground: var(--color-coal);
+  --color-muted: var(--color-lyserosa);
+  --color-muted-foreground: var(--color-coal-60);
+  --color-accent: var(--color-peppes-red-10);
+  --color-accent-foreground: var(--color-coal);
+  --color-destructive: var(--color-glowing-red);
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--color-coal-20);
+  --color-input: var(--color-coal-20);
+  --color-ring: var(--color-peppes-red-40);
+  --color-ring-offset-background: var(--color-light-bg);
+}

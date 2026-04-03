@@ -16,7 +16,7 @@ When adding local packages in this monorepo with Bun, use the `workspace:*` prot
 
 ```sh
 cd apps/web
-bun install @repo/ui@workspace:* @repo/tailwind-config@workspace:* --dev
+bun install @repo/tailwind-config@workspace:* --dev
 ```
 
 After that, a normal `bun install` works as expected.
@@ -27,9 +27,9 @@ This Turborepo includes the following packages/apps:
 
 ### Apps and Packages
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `api`: NestJS backend
+- `web`: Next.js frontend (shadcn-style UI lives in `apps/web/components/ui`)
+- `@repo/tailwind-config`: shared Tailwind v4 theme tokens for `web`
 - `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 

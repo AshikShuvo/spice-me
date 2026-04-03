@@ -13,7 +13,6 @@ spice-me/
     api/   — NestJS REST API          (port 3001)
     web/   — Next.js 16 frontend      (port 3003)
   packages/
-    ui/                — @repo/ui       shared React components + styles
     tailwind-config/   — @repo/tailwind-config
     typescript-config/ — @repo/typescript-config (base / nextjs / react-library)
     eslint-config/     — @repo/eslint-config
@@ -38,11 +37,12 @@ spice-me/
 | i18n (`en`, `no`, prefix routes) | complete | [.cursor/context/features/i18n.md](features/i18n.md) |
 | Backend setup (Swagger, Prisma, config, validation) | complete | [.cursor/context/features/backend-setup.md](features/backend-setup.md) |
 | Auth & user management (JWT, roles, users API) | complete | [.cursor/context/features/auth-user-management.md](features/auth-user-management.md) |
+| Frontend auth (NextAuth, modals, API client, admin shell) | complete | [.cursor/context/features/frontend-auth.md](features/frontend-auth.md) |
 
 ## Shared Conventions
 - Bun for all installs; `bun add <pkg> --filter <workspace>`
 - All tasks run through Turborepo: `bun turbo dev`, `bun turbo build`
-- Shared code → `packages/`; app-specific code stays in `apps/`
+- Shared code → `packages/` (config, no shared React UI package); app-specific code stays in `apps/` (UI primitives: `apps/web/components/ui`)
 - TypeScript config extends `@repo/typescript-config`
 - ESLint config extends `@repo/eslint-config`
 
@@ -51,7 +51,7 @@ spice-me/
 
 ### Authentication
 - **API:** JWT access token (Bearer, 15m) + refresh token (body field, 7d), bcrypt password hashing, refresh token stored hashed in DB. Roles: `ADMIN`, `USER`. See [auth-user-management.md](features/auth-user-management.md).
-- **Web:** not integrated yet — use that context file for frontend work.
+- **Web:** NextAuth + JWT session, `@modal` auth routes, `lib/api-client` with refresh — see [frontend-auth.md](features/frontend-auth.md).
 
 ### Error Handling
 - NestJS: throw built-in HTTP exceptions (`NotFoundException`, etc.) in services

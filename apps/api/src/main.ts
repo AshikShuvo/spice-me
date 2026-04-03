@@ -3,11 +3,29 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 
+function parseCorsOrigins(): string[] | boolean {
+  const raw = process.env.CORS_ORIGINS?.trim();
+  if (raw === '*' || raw === 'true') {
+    return true;
+  }
+  const list = (raw ?? 'http://localhost:3003')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  return list.length > 0 ? list : true;
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   const logger = new Logger('Bootstrap');
   app.useLogger(logger);
+
+  app.enableCors({
+    origin: parseCorsOrigins(),
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

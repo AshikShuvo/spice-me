@@ -31,7 +31,7 @@ export function SearchInput({ onSearch }: { onSearch: (q: string) => void }) {
 ## TailwindCSS (v4)
 - Use Tailwind utility classes exclusively — no inline `style={{}}`, no CSS Modules for new code.
 - Design mobile-first: base styles for mobile, `sm:` / `md:` / `lg:` for larger screens.
-- Use `@repo/tailwind-config` shared styles; import `@repo/ui/styles.css` in the root `layout.tsx`.
+- Use `@repo/tailwind-config` in `app/globals.css` for Peppes `@theme` tokens; shadcn semantic tokens live in `app/shadcn-theme.css`. UI primitives live under `components/ui/` (shadcn CLI / `components.json`).
 - Group related utilities: layout → spacing → typography → color → interaction.
 
 ```tsx
@@ -42,8 +42,8 @@ export function SearchInput({ onSearch }: { onSearch: (q: string) => void }) {
 ```
 
 ## Components
-- Shared, reusable components belong in `packages/ui` (imported as `@repo/ui`), not in `apps/web`.
-- Page-specific components live co-located inside their route segment folder.
+- Reusable UI primitives: `components/ui/*` (shadcn). Cross-route composites: `components/*`. Page-specific pieces can live next to their route under `app/`.
+- Page-specific components may live co-located inside their route segment folder.
 - Use semantic HTML: `<main>`, `<section>`, `<nav>`, `<header>`, `<footer>`, `<article>`.
 - Every interactive element must be keyboard-accessible and have an accessible label.
 

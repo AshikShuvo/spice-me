@@ -1,8 +1,8 @@
-import "@repo/ui/styles.css";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Providers } from "@/components/providers";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -33,7 +33,7 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className="font-ringside-narrow antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <Providers>{children}</Providers>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -1,5 +1,4 @@
-@import "tailwindcss";
-
+/* Theme tokens only — parent CSS must `@import "tailwindcss"` first (e.g. apps/web/globals.css). */
 @theme {
   /* ─── Typography ─────────────────────────────────────────────────── */
   --font-ringside-compressed: "Ringside Compressed", ui-sans-serif, system-ui, sans-serif;

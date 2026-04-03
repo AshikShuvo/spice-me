@@ -12,8 +12,7 @@ spice-me/
     api/        # NestJS backend  (package name: api,  port 3001)
     web/        # Next.js frontend (package name: web,  port 3003)
   packages/
-    ui/                  # @repo/ui       — shared React components + styles
-    tailwind-config/     # @repo/tailwind-config — shared Tailwind/PostCSS config
+    tailwind-config/     # @repo/tailwind-config — shared Tailwind theme tokens (no React UI package)
     typescript-config/   # @repo/typescript-config — tsconfig presets
     eslint-config/       # @repo/eslint-config — ESLint presets
 ```
@@ -45,17 +44,17 @@ Defined in `turbo.json`. All tasks fan-out via `turbo <task>` from the root:
 - Never run `next build` or `nest build` directly — always go through `turbo`.
 
 ## Shared Packages — Rules
-- **Code shared across apps** → add to `packages/ui` or create a new package under `packages/`.
+- **Code shared across apps** → create a new package under `packages/` (e.g. pure utilities, config). **React UI for the web app lives in `apps/web/components`** (shadcn-style), not in `packages/`.
 - **App-specific code never goes into `packages/`**.
-- Reference workspace packages using the `@repo/` scope (e.g. `@repo/ui`, `@repo/tailwind-config`).
+- Reference workspace packages using the `@repo/` scope (e.g. `@repo/tailwind-config`, `@repo/typescript-config`).
 - Every new package must have: `package.json` with correct `name`, `exports`, and `main`/`types` fields.
 
 ## TypeScript Config Inheritance
 ```
 packages/typescript-config/
   base.json          ← foundation (strict, ES2022, NodeNext)
-  nextjs.json        ← extends base — used by apps/web + packages/ui
-  react-library.json ← extends base — used by packages/ui components
+  nextjs.json        ← extends base — used by apps/web
+  react-library.json ← extends base — optional for future shared React packages
 ```
 - `apps/api` uses its own `tsconfig.json` (NestJS requires `experimentalDecorators`).
 - New packages must extend one of the `@repo/typescript-config` presets.
