@@ -12,16 +12,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  clearAuthReturnPath,
-  consumeAuthReturnPath,
-} from "@/lib/auth-return-path";
+import { clearAuthReturnPath } from "@/lib/auth-return-path";
 import { registerSchema } from "@/lib/validations/auth";
 import { useRouter } from "@/i18n/navigation";
-import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { AuthModalDismissContext } from "./auth-modal-dismiss-context";
+import { useAuthModalActions } from "./auth-modal-actions-context";
 import { AuthFormSwitcher } from "./auth-form-switcher";
 
 type RegisterValues = z.infer<typeof registerSchema>;
@@ -30,7 +26,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 export function RegisterForm() {
   const router = useRouter();
-  const dismissMode = useContext(AuthModalDismissContext);
+  const modalActions = useAuthModalActions();
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: "", email: "", password: "" },
@@ -68,13 +64,13 @@ export function RegisterForm() {
       });
       return;
     }
-    await router.refresh();
-    if (dismissMode === "replace-home") {
-      clearAuthReturnPath();
-      router.replace("/");
+    if (modalActions) {
+      await modalActions.completeSuccessfulAuth();
       return;
     }
-    router.replace(consumeAuthReturnPath());
+    await router.refresh();
+    clearAuthReturnPath();
+    await router.replace("/");
   }
 
   return (

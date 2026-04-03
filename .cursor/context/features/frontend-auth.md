@@ -32,7 +32,8 @@ status: complete
 | `apps/web/lib/validations/auth.ts` | Zod schemas for all auth forms |
 | `apps/web/components/providers.tsx` | `SessionProvider` |
 | `apps/web/components/auth/*` | `AuthModal`, `auth-modal-dismiss-context`, forms, switcher |
-| `apps/web/lib/auth-return-path.ts` | `captureAuthReturnPath` / `consumeAuthReturnPath` — modal success uses `replace(returnPath)`, not `back()` |
+| `apps/web/lib/auth-return-path.ts` | `captureAuthReturnPath` / `consumeAuthReturnPath`; fallback after auth is **`/menu`** if no path was stored |
+| `apps/web/components/auth/auth-modal-actions-context.tsx` | `completeSuccessfulAuth()` — refresh + single `replace` (avoids double navigation with dialog `onOpenChange`) |
 | `apps/web/components/header/*` | `Header`, `NavLinks`, `UserMenuButton` |
 | `apps/web/app/[locale]/(app)/@modal/(.)auth/*/page.tsx` | Intercepted modal pages |
 | `apps/web/app/[locale]/(app)/auth/*/page.tsx` | Full-page auth URLs use `AuthModal` + forms (`dismissNavigate="replace-home"`) |
@@ -91,7 +92,7 @@ Also declared in `turbo.json` `env` for `dev` / `build`.
 - **TypeScript:** `auth.config.ts` uses `Omit<NextAuthConfig, "providers">` so providers live only in `auth.ts`. `auth.ts` exports `handlers`, `auth`, `signIn`, `signOut` with explicit `NextAuthResult[...]` annotations to satisfy declaration emit portability checks.
 - **Imports:** Prefer `@/components/ui/*` and `@/lib/utils` (path alias).
 - **Locale:** Redirects in `proxy.ts` preserve `en` / `no` prefix (`/${locale}/auth/login`, `/${locale}`).
-- **After sign-in / register (modal):** Do not `router.back()` — the stack can be `/auth/login` → `/auth/register`, so one `back()` reopens login. Store the pre-auth pathname when entering from the app (`captureAuthReturnPath` on the sign-in `Link`, `lib/auth-return-path.ts`), then `router.replace(consumeAuthReturnPath())` after `await router.refresh()`. Full-page auth uses `dismissNavigate="replace-home"` → `router.replace("/")` and `clearAuthReturnPath()`.
+- **After sign-in / register:** Use `completeSuccessfulAuth()` from `AuthModalActionsContext` (refresh + `replace`). Closing the modal (X / overlay) also uses `router.replace(consumeAuthReturnPath())`, never `router.back()`. Stored path comes from `captureAuthReturnPath` on the sign-in entry `Link`; if missing, **`/menu`**. Full-page auth: `dismissNavigate="replace-home"` → `replace("/")` and `clearAuthReturnPath()`.
 - **Tailwind:** Only `app/globals.css` imports `tailwindcss`. **`@repo/tailwind-config` (`shared-style.css`) must not `@import "tailwindcss"`** — a second import breaks Tailwind v4.
 - **Global reset:** Use `:where(*)` for margin/padding reset so utilities like `p-6` win over the reset.
 

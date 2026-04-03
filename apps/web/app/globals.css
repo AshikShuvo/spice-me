@@ -90,11 +90,11 @@ body {
     margin: 0;
     padding: 0;
   }
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
+  /* Inside @layer base so `text-*` / `hover:text-*` utilities on <a> can win */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 /* Dark mode: override tokens when/if needed in future */

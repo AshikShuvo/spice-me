@@ -12,23 +12,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  clearAuthReturnPath,
-  consumeAuthReturnPath,
-} from "@/lib/auth-return-path";
+import { clearAuthReturnPath } from "@/lib/auth-return-path";
 import { loginSchema } from "@/lib/validations/auth";
 import { Link, useRouter } from "@/i18n/navigation";
-import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { AuthModalDismissContext } from "./auth-modal-dismiss-context";
+import { useAuthModalActions } from "./auth-modal-actions-context";
 import { AuthFormSwitcher } from "./auth-form-switcher";
 
 type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
   const router = useRouter();
-  const dismissMode = useContext(AuthModalDismissContext);
+  const modalActions = useAuthModalActions();
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -44,13 +40,13 @@ export function LoginForm() {
       form.setError("root", { message: "Invalid email or password" });
       return;
     }
-    await router.refresh();
-    if (dismissMode === "replace-home") {
-      clearAuthReturnPath();
-      router.replace("/");
+    if (modalActions) {
+      await modalActions.completeSuccessfulAuth();
       return;
     }
-    router.replace(consumeAuthReturnPath());
+    await router.refresh();
+    clearAuthReturnPath();
+    await router.replace("/");
   }
 
   return (
