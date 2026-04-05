@@ -31,7 +31,10 @@ export const authConfig: AuthConfigBase = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as "ADMIN" | "USER";
+        session.user.role = token.role as
+          | "ADMIN"
+          | "USER"
+          | "RESTAURANT_ADMIN";
       }
       session.accessToken = token.accessToken as string;
       session.refreshToken = token.refreshToken as string;

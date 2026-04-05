@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getAuthSecret } from "./lib/auth-env";
 import { routing } from "./i18n/routing";
+import { canAccessAdminShell } from "./lib/types/roles";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -27,8 +28,21 @@ export async function proxy(request: NextRequest) {
         new URL(`/${locale}/auth/login`, request.url),
       );
     }
-    if (token.role !== "ADMIN") {
+    if (!canAccessAdminShell(token.role as string | undefined)) {
       return NextResponse.redirect(new URL(`/${locale}`, request.url));
+    }
+    if (token.role === "RESTAURANT_ADMIN") {
+      const adminOnlyPrefixes = [
+        "/admin/restaurants",
+        "/admin/restaurant-admins",
+      ] as const;
+      if (
+        adminOnlyPrefixes.some((prefix) => pathWithoutLocale.startsWith(prefix))
+      ) {
+        return NextResponse.redirect(
+          new URL(`/${locale}/admin/dashboard`, request.url),
+        );
+      }
     }
   }
 

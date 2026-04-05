@@ -2,7 +2,7 @@
 
 ## Summary
 
-Next.js admin UI for `ADMIN` users: list/create/edit restaurants (UTC opening/closing times, IANA timezone, geo), toggle active status, set default restaurant, list restaurant detail with assigned `RESTAURANT_ADMIN` users, assign/remove assignments, and manage restaurant-admin user accounts (`POST /users/restaurant-admin`, soft-delete). All HTTP calls go through a **service layer** with try/catch; components only call service hooks or server service functions.
+Next.js admin UI: **`ADMIN`** — full CRUD for restaurants and restaurant-admin users (UTC hours, IANA timezone, geo), assignments, soft-delete. **`RESTAURANT_ADMIN`** — same `/admin` shell and dashboard, but **no** Restaurants / Restaurant Admins nav links; `proxy.ts` blocks those URLs; sidebar **active restaurant** `Select` (assigned locations from `GET /restaurants/my`) with choice persisted in `localStorage` for future orders/stats. All HTTP calls go through a **service layer** with try/catch.
 
 ## Status
 
@@ -20,13 +20,16 @@ Next.js admin UI for `ADMIN` users: list/create/edit restaurants (UTC opening/cl
 
 | File | Role |
 |------|------|
-| `apps/web/app/[locale]/(admin)/layout.tsx` | Admin sidebar: Dashboard, Restaurants, Restaurant Admins |
+| `apps/web/app/[locale]/(admin)/layout.tsx` | Sidebar by role: all see Dashboard; only `ADMIN` sees Restaurants + Restaurant Admins; `RESTAURANT_ADMIN` sees restaurant `Select` + `SelectedRestaurantProvider` |
+| `apps/web/components/admin/selected-restaurant-context.tsx` | `RESTAURANT_ADMIN` selected restaurant + `localStorage` |
+| `apps/web/components/admin/restaurant-admin-restaurant-select.tsx` | Sidebar shadcn `Select` for assigned restaurants |
+| `apps/web/components/admin/restaurant-admin-dashboard-summary.tsx` | Dashboard card for selected restaurant |
 | `apps/web/lib/types/admin-api.ts` | JSON shapes: `RestaurantProfile`, `UserProfile`, `Paginated`, assignments |
 | `apps/web/lib/validations/restaurant.ts` | Zod: `createRestaurantSchema`, `updateRestaurantSchema`, `createRestaurantAdminSchema` |
 | `apps/web/lib/services/normalise-error.ts` | Maps `ApiRequestError` / unknown → `Error` with message |
-| `apps/web/lib/services/use-restaurant-service.ts` | Client hook: restaurant CRUD, status, default, assign/remove admin, list admins |
+| `apps/web/lib/services/use-restaurant-service.ts` | Client hook: restaurant CRUD, status, default, assign/remove admin, list admins, `getMyRestaurants` |
 | `apps/web/lib/services/use-user-service.ts` | Client hook: `getUsers`, `createRestaurantAdmin`, `softDeleteUser` |
-| `apps/web/lib/services/restaurant-server.service.ts` | RSC: `getRestaurantsServer`, `getRestaurantServer`, `getRestaurantAdminsServer` |
+| `apps/web/lib/services/restaurant-server.service.ts` | RSC: `getRestaurantsServer`, `getRestaurantServer`, `getRestaurantAdminsServer`, `getMyRestaurantsServer` (`GET /restaurants/my`) |
 | `apps/web/lib/services/user-server.service.ts` | RSC: `getUsersServer` |
 | `apps/web/lib/api-client.ts` | `delete()` added for `DELETE /restaurants/:id/admins/:userId` |
 | `apps/web/components/ui/combobox.tsx` | Reusable searchable select (Popover + Command) |

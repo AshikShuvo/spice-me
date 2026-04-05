@@ -96,7 +96,8 @@ export function UserMenuButton() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {session.user.role === "ADMIN" ? (
+        {session.user.role === "ADMIN" ||
+        session.user.role === "RESTAURANT_ADMIN" ? (
           <DropdownMenuItem asChild>
             <Link href="/admin/dashboard">Dashboard</Link>
           </DropdownMenuItem>

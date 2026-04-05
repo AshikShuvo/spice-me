@@ -34,7 +34,7 @@ const nextAuth = NextAuth({
             id: string;
             email: string;
             name: string;
-            role: "ADMIN" | "USER";
+            role: "ADMIN" | "USER" | "RESTAURANT_ADMIN";
           };
           accessToken: string;
           refreshToken: string;

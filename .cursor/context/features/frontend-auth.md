@@ -25,7 +25,8 @@ status: complete
 | `apps/web/auth.ts` | NextAuth init, Credentials provider → API login |
 | `apps/web/auth.config.ts` | JWT/session callbacks (tokens in JWT; `Omit<NextAuthConfig,"providers">`) |
 | `apps/web/types/next-auth.d.ts` | Extends `Session` / `JWT` with `id`, `role`, `accessToken`, `refreshToken` |
-| `apps/web/proxy.ts` | `getToken` + `ADMIN` check for `/admin` and `/dashboard`; then `next-intl` middleware |
+| `apps/web/proxy.ts` | `getToken` + admin shell: `ADMIN` or `RESTAURANT_ADMIN` for `/admin` and `/dashboard`; `RESTAURANT_ADMIN` redirected away from `/admin/restaurants` and `/admin/restaurant-admins`; then `next-intl` middleware |
+| `apps/web/lib/types/roles.ts` | `canAccessAdminShell(role)` shared by `proxy.ts` |
 | `apps/web/lib/api-client.ts` | `apiFetch` with 401 → refresh queue, retries with new access token |
 | `apps/web/lib/use-api-client.ts` | Client hook: `useSession` + `update()` after refresh |
 | `apps/web/lib/server-api.ts` | RSC helper using `auth()` (no client refresh loop) |
@@ -48,12 +49,12 @@ status: complete
 
 ```ts
 // Conceptual — see types/next-auth.d.ts
-session.user: { id, name, email, role: "ADMIN" | "USER" }
+session.user: { id, name, email, role: "ADMIN" | "USER" | "RESTAURANT_ADMIN" }
 session.accessToken: string
 session.refreshToken: string  // exposed for client api-client refresh; still also in JWT cookie
 ```
 
-**Proxy / JWT:** `getToken` reads the encrypted JWT; `token.role` must be set in the `jwt` callback (from `user.role` on sign-in) for `/admin` and `/dashboard` checks.
+**Proxy / JWT:** `getToken` reads the encrypted JWT; `token.role` must be set in the `jwt` callback (from `user.role` on sign-in) for `/admin` and `/dashboard` checks. `UserMenuButton` shows **Dashboard** for `ADMIN` and `RESTAURANT_ADMIN`.
 
 ## API client usage
 
@@ -101,4 +102,4 @@ Also declared in `turbo.json` `env` for `dev` / `build`.
 - [x] Login returns user + `accessToken` + `refreshToken` matching `authorize()` in `auth.ts`
 - [x] Refresh endpoint returns new access (and refresh if rotated) consistent with `api-client.ts`
 - [x] Logout accepts Bearer access token (`UserMenuButton`)
-- [x] User role enum matches `ADMIN` | `USER` for menu + proxy
+- [x] User role enum matches `ADMIN` | `USER` | `RESTAURANT_ADMIN` for menu + proxy

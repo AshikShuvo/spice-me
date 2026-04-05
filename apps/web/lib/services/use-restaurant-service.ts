@@ -54,6 +54,14 @@ export function useRestaurantService() {
         }
       },
 
+      async getMyRestaurants(): Promise<RestaurantProfile[]> {
+        try {
+          return await api.get<RestaurantProfile[]>("/restaurants/my");
+        } catch (e) {
+          throw normaliseError(e);
+        }
+      },
+
       async createRestaurant(
         dto: CreateRestaurantInput,
       ): Promise<RestaurantProfile> {

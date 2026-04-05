@@ -47,3 +47,13 @@ export async function getRestaurantAdminsServer(
     throw normaliseError(e);
   }
 }
+
+/** Assigned restaurants for the current user (`RESTAURANT_ADMIN` only). */
+export async function getMyRestaurantsServer(): Promise<RestaurantProfile[]> {
+  try {
+    const api = await createServerApiClient();
+    return await api.get<RestaurantProfile[]>("/restaurants/my");
+  } catch (e) {
+    throw normaliseError(e);
+  }
+}
