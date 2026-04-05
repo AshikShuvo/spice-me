@@ -14,6 +14,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             >
               Dashboard
             </Link>
+            <Link
+              href="/admin/restaurants"
+              className="text-body text-coal hover:text-peppes-red"
+            >
+              Restaurants
+            </Link>
+            <Link
+              href="/admin/restaurant-admins"
+              className="text-body text-coal hover:text-peppes-red"
+            >
+              Restaurant Admins
+            </Link>
             <Link href="/" className="text-body text-neutral-30 hover:text-coal">
               Back to site
             </Link>

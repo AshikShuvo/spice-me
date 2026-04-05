@@ -113,6 +113,7 @@ Declare **`GET` `default`**, **`GET` `my`**, **`GET` `:id/admins`** before **`GE
 
 - Auth JWT + `RolesGuard`; see [auth-user-management.md](auth-user-management.md).
 - PostgreSQL + migrations applied.
+- Admin UI for this module: [frontend-restaurant-module.md](frontend-restaurant-module.md).
 
 ## Gotchas
 
