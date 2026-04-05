@@ -2,7 +2,7 @@
 
 ## Summary
 
-NestJS authentication and user administration: self-registration as `USER`, JWT access + refresh (refresh token bcrypt-hashed in DB), forgot/reset password, role-based guards (`ADMIN` / `USER`), admin-only user listing and admin creation. Default admin is created via Prisma seed.
+NestJS authentication and user administration: self-registration as `USER`, JWT access + refresh (refresh token bcrypt-hashed in DB), forgot/reset password, role-based guards (`ADMIN` / `USER` / `RESTAURANT_ADMIN`), admin-only user listing, admin creation, and restaurant-admin user creation. Default admin is created via Prisma seed (restaurant flows documented in [restaurant-module.md](restaurant-module.md)).
 
 ## Status
 
@@ -32,8 +32,8 @@ NestJS authentication and user administration: self-registration as `USER`, JWT 
 | `apps/api/src/users/users.module.ts` | Users feature module |
 | `apps/api/src/users/users.service.ts` | Profiles, list, create admin, role, soft-delete |
 | `apps/api/src/users/users.controller.ts` | `/users/*` routes |
-| `apps/api/src/users/dto/*.ts` | User/admin DTOs |
-| `apps/api/prisma/schema.prisma` | `User` model, `Role` enum |
+| `apps/api/src/users/dto/*.ts` | User/admin/restaurant-admin DTOs |
+| `apps/api/prisma/schema.prisma` | `User` model, `Role` enum (includes `RESTAURANT_ADMIN`) |
 | `apps/api/prisma/seed.ts` | Default admin |
 | `apps/api/prisma.config.ts` | `migrations.seed` → `bun prisma/seed.ts` |
 | `apps/api/test/auth.e2e-spec.ts` | E2E coverage |
@@ -45,6 +45,7 @@ NestJS authentication and user administration: self-registration as `USER`, JWT 
 enum Role {
   ADMIN
   USER
+  RESTAURANT_ADMIN
 }
 
 model User {
@@ -65,7 +66,7 @@ Decoded access and refresh JWTs share the same claims:
 interface JwtPayload {
   sub: string;   // user id (cuid)
   email: string;
-  role: 'ADMIN' | 'USER';
+  role: 'ADMIN' | 'USER' | 'RESTAURANT_ADMIN';
   iat: number;
   exp: number;
 }
@@ -150,13 +151,20 @@ Base path: no global prefix (e.g. `http://localhost:3001/auth/login`).
 ### `PATCH /users/:id/role`
 
 - **Auth:** Bearer + `ADMIN`  
-- **Body:** `{ role: 'ADMIN' | 'USER' }`  
+- **Body:** `{ role: 'ADMIN' | 'USER' | 'RESTAURANT_ADMIN' }`  
 - **200:** `UserProfile`  
+
+### `POST /users/restaurant-admin`
+
+- **Auth:** Bearer + `ADMIN`  
+- **Body:** `{ name: string; email: string; password: string }` — same password rules as register  
+- **201:** `UserProfile` (new user with `role: RESTAURANT_ADMIN`)  
+- **409:** email exists  
 
 ### `DELETE /users/:id`
 
 - **Auth:** Bearer + `ADMIN`  
-- **200:** `{ message: string }` — sets `isActive: false`, clears refresh  
+- **200:** `{ message: string }` — sets `isActive: false`, clears refresh; if user was `RESTAURANT_ADMIN`, deletes all `RestaurantAdminAssignment` rows for that user (same transaction)  
 
 ## Token refresh flow (frontend)
 
@@ -188,7 +196,7 @@ sequenceDiagram
 ## Role-based access (frontend)
 
 - Read `role` from login/register `user` or decode access JWT (e.g. `jwt-decode`).  
-- Hide/disable admin UI when `role !== 'ADMIN'`.  
+- Hide/disable admin UI when `role !== 'ADMIN'`; restaurant-admin UI when `role !== 'RESTAURANT_ADMIN'` for scoped dashboards.  
 - **Backend always enforces** roles; frontend checks are UX only.  
 
 ## Guards & decorators (backend)

@@ -8,6 +8,7 @@ import { Role } from '../../generated/prisma/enums.js';
 import type { User } from '../../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateAdminDto } from './dto/create-admin.dto.js';
+import type { CreateRestaurantAdminDto } from './dto/create-restaurant-admin.dto.js';
 import type { ListUsersQueryDto } from './dto/list-users-query.dto.js';
 import type { UpdateProfileDto } from './dto/update-profile.dto.js';
 import type { UpdateRoleDto } from './dto/update-role.dto.js';
@@ -101,6 +102,27 @@ export class UsersService {
     return this.toProfile(user);
   }
 
+  async createRestaurantAdmin(
+    dto: CreateRestaurantAdminDto,
+  ): Promise<UserProfile> {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email.toLowerCase() },
+    });
+    if (existing) {
+      throw new ConflictException('Email already registered');
+    }
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        email: dto.email.toLowerCase(),
+        name: dto.name,
+        password: passwordHash,
+        role: Role.RESTAURANT_ADMIN,
+      },
+    });
+    return this.toProfile(user);
+  }
+
   async updateRole(userId: string, dto: UpdateRoleDto): Promise<UserProfile> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
@@ -118,12 +140,19 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        isActive: false,
-        refreshToken: null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      if (user.role === Role.RESTAURANT_ADMIN) {
+        await tx.restaurantAdminAssignment.deleteMany({
+          where: { userId },
+        });
+      }
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          isActive: false,
+          refreshToken: null,
+        },
+      });
     });
     return { message: 'User deactivated' };
   }

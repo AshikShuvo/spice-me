@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -17,6 +19,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import type { JwtUser } from '../auth/types/jwt-user.type.js';
 import { CreateAdminDto } from './dto/create-admin.dto.js';
+import { CreateRestaurantAdminDto } from './dto/create-restaurant-admin.dto.js';
 import { ListUsersQueryDto } from './dto/list-users-query.dto.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { UpdateRoleDto } from './dto/update-role.dto.js';
@@ -59,6 +62,16 @@ export class UsersController {
   @ApiOperation({ summary: 'Create another admin' })
   async createAdmin(@Body() dto: CreateAdminDto) {
     return this.usersService.createAdmin(dto);
+  }
+
+  @Post('restaurant-admin')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Create restaurant admin user' })
+  async createRestaurantAdmin(@Body() dto: CreateRestaurantAdminDto) {
+    return this.usersService.createRestaurantAdmin(dto);
   }
 
   @Patch(':id/role')

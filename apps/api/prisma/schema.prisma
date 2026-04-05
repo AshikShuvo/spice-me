@@ -12,6 +12,7 @@ datasource db {
 enum Role {
   ADMIN
   USER
+  RESTAURANT_ADMIN
 }
 
 model User {
@@ -26,4 +27,36 @@ model User {
   isActive             Boolean   @default(true)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+
+  restaurantAssignments RestaurantAdminAssignment[]
+}
+
+model Restaurant {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  code             String   @unique
+  address          String
+  latitude         Float
+  longitude        Float
+  timezone         String
+  openingTime      String
+  closingTime      String
+  isActive         Boolean  @default(true)
+  isDefault        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  adminAssignments RestaurantAdminAssignment[]
+}
+
+model RestaurantAdminAssignment {
+  id           String   @id @default(cuid())
+  restaurantId String
+  userId       String
+  assignedAt   DateTime @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, userId])
 }

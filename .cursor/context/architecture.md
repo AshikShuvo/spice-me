@@ -38,6 +38,7 @@ spice-me/
 | Backend setup (Swagger, Prisma, config, validation) | complete | [.cursor/context/features/backend-setup.md](features/backend-setup.md) |
 | Auth & user management (JWT, roles, users API) | complete | [.cursor/context/features/auth-user-management.md](features/auth-user-management.md) |
 | Frontend auth (NextAuth, modals, API client, admin shell) | complete | [.cursor/context/features/frontend-auth.md](features/frontend-auth.md) |
+| Restaurant module (default restaurant, assignments, UTC hours) | complete | [.cursor/context/features/restaurant-module.md](features/restaurant-module.md) |
 
 ## Shared Conventions
 - Bun for all installs; `bun add <pkg> --filter <workspace>`
@@ -50,7 +51,7 @@ spice-me/
 <!-- Document things that affect every feature: auth, error handling, logging, etc. -->
 
 ### Authentication
-- **API:** JWT access token (Bearer, 15m) + refresh token (body field, 7d), bcrypt password hashing, refresh token stored hashed in DB. Roles: `ADMIN`, `USER`. See [auth-user-management.md](features/auth-user-management.md).
+- **API:** JWT access token (Bearer, 15m) + refresh token (body field, 7d), bcrypt password hashing, refresh token stored hashed in DB. Roles: `ADMIN`, `USER`, `RESTAURANT_ADMIN`. See [auth-user-management.md](features/auth-user-management.md) and [restaurant-module.md](features/restaurant-module.md).
 - **Web:** NextAuth + JWT session, `@modal` auth routes, `lib/api-client` with refresh — see [frontend-auth.md](features/frontend-auth.md).
 
 ### Error Handling
