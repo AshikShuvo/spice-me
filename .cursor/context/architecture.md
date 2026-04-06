@@ -40,6 +40,7 @@ spice-me/
 | Frontend auth (NextAuth, modals, API client, admin shell) | complete | [.cursor/context/features/frontend-auth.md](features/frontend-auth.md) |
 | Restaurant module (default restaurant, assignments, UTC hours) | complete | [.cursor/context/features/restaurant-module.md](features/restaurant-module.md) |
 | Restaurant module (admin UI: restaurants, assignments, restaurant admins) | complete | [.cursor/context/features/frontend-restaurant-module.md](features/frontend-restaurant-module.md) |
+| Backend product management (categories, products, variants, allergies, restaurant products) | complete | [.cursor/context/features/backend-product-management.md](features/backend-product-management.md) |
 
 ## Shared Conventions
 - Bun for all installs; `bun add <pkg> --filter <workspace>`
