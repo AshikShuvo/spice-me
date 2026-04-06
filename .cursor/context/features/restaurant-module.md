@@ -85,10 +85,10 @@ Base URL: no global prefix (e.g. `http://localhost:3001/restaurants`).
 |--------|------|-------|-------------|
 | `GET` | `/restaurants/my` | `RESTAURANT_ADMIN` | Assigned restaurants |
 | `GET` | `/restaurants/:id` | any logged-in | `ADMIN`: any; `RESTAURANT_ADMIN`: only if assigned; `USER`: **403** |
-| `POST` | `/restaurants` | `ADMIN` | Create (201) |
+| `POST` | `/restaurants` | `ADMIN` | Create (201); **409** if `name` duplicates unique constraint |
 | `GET` | `/restaurants` | `ADMIN` | Paginated list (`page`, `limit`) |
 | `GET` | `/restaurants/:id/admins` | `ADMIN` | List assignments + `UserProfile` (no password / refreshToken) |
-| `PATCH` | `/restaurants/:id` | `ADMIN` | Partial update (not `code` / `id`) |
+| `PATCH` | `/restaurants/:id` | `ADMIN` | Partial update (not `code` / `id`); **409** if new `name` duplicates another row |
 | `PATCH` | `/restaurants/:id/status` | `ADMIN` | `{ isActive: boolean }` |
 | `PATCH` | `/restaurants/:id/default` | `ADMIN` | Set as sole default |
 | `POST` | `/restaurants/:id/admins` | `ADMIN` | `{ userId }` — user must be `RESTAURANT_ADMIN` (201) |
@@ -117,6 +117,7 @@ Declare **`GET` `default`**, **`GET` `my`**, **`GET` `:id/admins`** before **`GE
 
 ## Gotchas
 
+- Prisma **P2002** on `name` (and `code`) is mapped to **`409 Conflict`** with a clear message in `RestaurantsService` (`create` / `update`), including pg-adapter `meta.driverAdapterError` shapes.
 - Concurrent creates can race on code generation (acceptable for current scale).
 - `softDelete` on a `RESTAURANT_ADMIN` removes all `RestaurantAdminAssignment` rows in the same `$transaction` as deactivating the user.
 - E2E file upserts `admin@spiceme.com` so login works when the DB was never seeded.

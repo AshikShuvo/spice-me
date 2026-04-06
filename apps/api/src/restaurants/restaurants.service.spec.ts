@@ -8,6 +8,7 @@ import {
 } from '@jest/globals';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
@@ -141,6 +142,25 @@ describe('RestaurantsService', () => {
         }),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('throws ConflictException when name unique constraint fails (P2002)', async () => {
+      prisma.restaurant.findFirst.mockResolvedValue(null);
+      prisma.restaurant.create.mockRejectedValue({
+        code: 'P2002',
+        meta: { modelName: 'Restaurant', target: ['name'] },
+      });
+      await expect(
+        service.create({
+          name: 'Dup',
+          address: '1 Main St',
+          latitude: 0,
+          longitude: 0,
+          timezone: 'UTC',
+          openingTime: '01:00',
+          closingTime: '02:00',
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
   });
 
   describe('findAll', () => {
@@ -227,6 +247,22 @@ describe('RestaurantsService', () => {
         where: { id: 'r1' },
         data: { name: 'New' },
       });
+    });
+
+    it('throws ConflictException when rename hits existing name (P2002)', async () => {
+      prisma.restaurant.findUnique.mockResolvedValue(baseRestaurant);
+      prisma.restaurant.update.mockRejectedValue({
+        code: 'P2002',
+        meta: {
+          modelName: 'Restaurant',
+          driverAdapterError: {
+            cause: { constraint: { fields: ['name'] } },
+          },
+        },
+      });
+      await expect(service.update('r1', { name: 'Taken' })).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 

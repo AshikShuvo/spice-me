@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -25,6 +26,55 @@ export class RestaurantsService {
     return { ...r };
   }
 
+  /** Supports classic Prisma `meta.target` and pg-adapter `driverAdapterError.cause.constraint.fields`. */
+  private uniqueConstraintFieldsFromMeta(meta: unknown): string[] {
+    if (!meta || typeof meta !== 'object') return [];
+    const m = meta as Record<string, unknown>;
+    const target = m.target;
+    if (Array.isArray(target)) {
+      return target.filter((x): x is string => typeof x === 'string');
+    }
+    if (typeof target === 'string') return [target];
+    const adapter = m.driverAdapterError as
+      | { cause?: { constraint?: { fields?: unknown } } }
+      | undefined;
+    const fields = adapter?.cause?.constraint?.fields;
+    if (Array.isArray(fields)) {
+      return fields.filter((x): x is string => typeof x === 'string');
+    }
+    return [];
+  }
+
+  /** Avoid `instanceof PrismaClientKnownRequestError` (breaks under some Jest/ESM setups). */
+  private isPrismaUniqueViolation(error: unknown): error is { meta?: unknown } {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code: string }).code === 'P2002'
+    );
+  }
+
+  private handleRestaurantUniqueViolation(error: unknown): never {
+    if (this.isPrismaUniqueViolation(error)) {
+      const fields = this.uniqueConstraintFieldsFromMeta(
+        (error as { meta?: unknown }).meta,
+      );
+      if (fields.includes('name')) {
+        throw new ConflictException(
+          'A restaurant with this name already exists',
+        );
+      }
+      if (fields.includes('code')) {
+        throw new ConflictException(
+          'Could not assign a unique restaurant code; try again',
+        );
+      }
+      throw new ConflictException('Duplicate restaurant record');
+    }
+    throw error;
+  }
+
   private async generateCode(tx: Prisma.TransactionClient): Promise<string> {
     const last = await tx.restaurant.findFirst({
       orderBy: { code: 'desc' },
@@ -38,22 +88,26 @@ export class RestaurantsService {
   }
 
   async create(dto: CreateRestaurantDto): Promise<RestaurantProfile> {
-    const created = await this.prisma.$transaction(async (tx) => {
-      const code = await this.generateCode(tx);
-      return tx.restaurant.create({
-        data: {
-          name: dto.name.trim(),
-          code,
-          address: dto.address.trim(),
-          latitude: dto.latitude,
-          longitude: dto.longitude,
-          timezone: dto.timezone.trim(),
-          openingTime: dto.openingTime,
-          closingTime: dto.closingTime,
-        },
+    try {
+      const created = await this.prisma.$transaction(async (tx) => {
+        const code = await this.generateCode(tx);
+        return tx.restaurant.create({
+          data: {
+            name: dto.name.trim(),
+            code,
+            address: dto.address.trim(),
+            latitude: dto.latitude,
+            longitude: dto.longitude,
+            timezone: dto.timezone.trim(),
+            openingTime: dto.openingTime,
+            closingTime: dto.closingTime,
+          },
+        });
       });
-    });
-    return this.toProfile(created);
+      return this.toProfile(created);
+    } catch (e) {
+      this.handleRestaurantUniqueViolation(e);
+    }
   }
 
   async findAll(query: ListRestaurantsQueryDto): Promise<{
@@ -137,19 +191,27 @@ export class RestaurantsService {
     if (!existing) {
       throw new NotFoundException('Restaurant not found');
     }
-    const updated = await this.prisma.restaurant.update({
-      where: { id },
-      data: {
-        ...(dto.name !== undefined && { name: dto.name.trim() }),
-        ...(dto.address !== undefined && { address: dto.address.trim() }),
-        ...(dto.latitude !== undefined && { latitude: dto.latitude }),
-        ...(dto.longitude !== undefined && { longitude: dto.longitude }),
-        ...(dto.timezone !== undefined && { timezone: dto.timezone.trim() }),
-        ...(dto.openingTime !== undefined && { openingTime: dto.openingTime }),
-        ...(dto.closingTime !== undefined && { closingTime: dto.closingTime }),
-      },
-    });
-    return this.toProfile(updated);
+    try {
+      const updated = await this.prisma.restaurant.update({
+        where: { id },
+        data: {
+          ...(dto.name !== undefined && { name: dto.name.trim() }),
+          ...(dto.address !== undefined && { address: dto.address.trim() }),
+          ...(dto.latitude !== undefined && { latitude: dto.latitude }),
+          ...(dto.longitude !== undefined && { longitude: dto.longitude }),
+          ...(dto.timezone !== undefined && { timezone: dto.timezone.trim() }),
+          ...(dto.openingTime !== undefined && {
+            openingTime: dto.openingTime,
+          }),
+          ...(dto.closingTime !== undefined && {
+            closingTime: dto.closingTime,
+          }),
+        },
+      });
+      return this.toProfile(updated);
+    } catch (e) {
+      this.handleRestaurantUniqueViolation(e);
+    }
   }
 
   async updateStatus(
