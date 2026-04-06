@@ -29,6 +29,18 @@ export class RestaurantProductsController {
     private readonly restaurantProductsService: RestaurantProductsService,
   ) {}
 
+  @Get('manage')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.RESTAURANT_ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'All linked products for restaurant admin (incl. unavailable)' })
+  findAllManaged(
+    @Param('restaurantId') restaurantId: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.restaurantProductsService.findAllManaged(restaurantId, user);
+  }
+
   @Get()
   @ApiOperation({
     summary: 'List available products for restaurant (public)',

@@ -70,6 +70,54 @@ export default async function AdminLayout({
                   </Link>
                 </>
               ) : null}
+
+              <div className="mt-2 border-t border-coal-20 pt-3">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wider text-coal/50">
+                  Products
+                </p>
+                {role === "ADMIN" ? (
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      href="/admin/products"
+                      className="text-body text-coal hover:text-peppes-red"
+                    >
+                      Overview
+                    </Link>
+                    <Link
+                      href="/admin/products/categories"
+                      className="text-body text-coal hover:text-peppes-red"
+                    >
+                      Categories
+                    </Link>
+                    <Link
+                      href="/admin/products/subcategories"
+                      className="text-body text-coal hover:text-peppes-red"
+                    >
+                      Sub Categories
+                    </Link>
+                    <Link
+                      href="/admin/products/allergy-items"
+                      className="text-body text-coal hover:text-peppes-red"
+                    >
+                      Allergy Items
+                    </Link>
+                    <Link
+                      href="/admin/products/catalog"
+                      className="text-body text-coal hover:text-peppes-red"
+                    >
+                      Products
+                    </Link>
+                  </div>
+                ) : (
+                  <Link
+                    href="/admin/products"
+                    className="text-body text-coal hover:text-peppes-red"
+                  >
+                    My Products
+                  </Link>
+                )}
+              </div>
+
               <Link href="/" className="text-body text-neutral-30 hover:text-coal">
                 Back to site
               </Link>

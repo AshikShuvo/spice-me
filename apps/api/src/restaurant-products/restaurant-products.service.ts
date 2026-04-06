@@ -63,6 +63,55 @@ export class RestaurantProductsService {
     throw error;
   }
 
+  async findAllManaged(
+    restaurantId: string,
+    currentUser: JwtUser,
+  ): Promise<
+    Array<{
+      id: string;
+      restaurantId: string;
+      productId: string;
+      isAvailable: boolean;
+      addedAt: string;
+      updatedAt: string;
+      product: ProductProfile;
+    }>
+  > {
+    await this.assertRestaurantAccess(restaurantId, currentUser.userId);
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+    });
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+    const rows = await this.prisma.restaurantProduct.findMany({
+      where: { restaurantId },
+      include: { product: { include: PRODUCT_INCLUDE_LITE } },
+      orderBy: { addedAt: 'desc' },
+    });
+    return rows.map((r) => this.toManageRow(r));
+  }
+
+  private toManageRow(r: {
+    id: string;
+    restaurantId: string;
+    productId: string;
+    isAvailable: boolean;
+    addedAt: Date;
+    updatedAt: Date;
+    product: ProductWithRelations;
+  }) {
+    return {
+      id: r.id,
+      restaurantId: r.restaurantId,
+      productId: r.productId,
+      isAvailable: r.isAvailable,
+      addedAt: r.addedAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      product: this.productsService.toProfile(r.product),
+    };
+  }
+
   async findAvailable(restaurantId: string): Promise<ProductProfile[]> {
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { id: restaurantId },
@@ -108,11 +157,16 @@ export class RestaurantProductsService {
       throw new BadRequestException('Product is not published');
     }
     try {
-      return await this.prisma.restaurantProduct.create({
+      const created = await this.prisma.restaurantProduct.create({
         data: {
           restaurantId,
           productId: dto.productId,
         },
+        include: { product: { include: PRODUCT_INCLUDE_LITE } },
+      });
+      return this.toManageRow({
+        ...created,
+        product: created.product as ProductWithRelations,
       });
     } catch (e) {
       this.handleRestaurantProductUniqueViolation(e);
@@ -132,9 +186,14 @@ export class RestaurantProductsService {
     if (!link) {
       throw new NotFoundException('Product is not linked to this restaurant');
     }
-    return this.prisma.restaurantProduct.update({
+    const updated = await this.prisma.restaurantProduct.update({
       where: { id: link.id },
       data: { isAvailable: dto.isAvailable },
+      include: { product: { include: PRODUCT_INCLUDE_LITE } },
+    });
+    return this.toManageRow({
+      ...updated,
+      product: updated.product as ProductWithRelations,
     });
   }
 
