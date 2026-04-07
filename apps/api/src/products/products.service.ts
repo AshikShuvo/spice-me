@@ -16,13 +16,7 @@ import type { ListProductsQueryDto } from './dto/list-products-query.dto.js';
 import type { UpdateProductDto } from './dto/update-product.dto.js';
 import type { UpdateProductPublishDto } from './dto/update-product-publish.dto.js';
 import type { UpdateVariantDto } from './dto/update-variant.dto.js';
-
-export const PRODUCT_INCLUDE = {
-  category: { select: { id: true, name: true } },
-  subCategory: { select: { id: true, name: true } },
-  variants: { orderBy: { sortOrder: 'asc' as const } },
-  allergyItems: { include: { allergyItem: true } },
-} as const;
+import { PRODUCT_INCLUDE } from './product-include.js';
 
 export type ProductVariantProfile = {
   id: string;

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { PRODUCT_INCLUDE } from '../products/product-include.js';
 import {
-  PRODUCT_INCLUDE,
   ProductsService,
   type ProductProfile,
   type ProductWithRelations,
