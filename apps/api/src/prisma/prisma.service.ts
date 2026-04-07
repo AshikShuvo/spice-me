@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../generated/prisma/client.js';
 
+/** Keep `pg` aligned with package.json (8.18.x): pg 8.19+ warns on concurrent `Client#query` inside @prisma/adapter-pg transactions (prisma/prisma#29407). */
+
 @Injectable()
 export class PrismaService
   extends PrismaClient
