@@ -14,6 +14,16 @@ export async function proxy(request: NextRequest) {
   const locale = localeMatch?.[1] ?? routing.defaultLocale;
   const pathWithoutLocale = pathname.replace(/^\/(en|no)/, "") || "/";
 
+  if (pathWithoutLocale === "/menu") {
+    const code = request.nextUrl.searchParams.get("restaurantCode")?.trim();
+    if (code) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}/menu/r/${encodeURIComponent(code)}`;
+      url.searchParams.delete("restaurantCode");
+      return NextResponse.redirect(url);
+    }
+  }
+
   const isProtectedAdminArea =
     pathWithoutLocale.startsWith("/admin") ||
     pathWithoutLocale.startsWith("/dashboard");

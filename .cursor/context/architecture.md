@@ -42,6 +42,7 @@ spice-me/
 | Restaurant module (admin UI: restaurants, assignments, restaurant admins) | complete | [.cursor/context/features/frontend-restaurant-module.md](features/frontend-restaurant-module.md) |
 | Backend product management (categories, products, variants, allergies, restaurant products) | complete | [.cursor/context/features/backend-product-management.md](features/backend-product-management.md) |
 | Frontend product management (catalog, categories, subcategories, allergy items, restaurant products) | complete | [.cursor/context/features/frontend-product-management.md](features/frontend-product-management.md) |
+| Public menu browse (categories, subcategories, product grid) | complete | [.cursor/context/features/frontend-menu.md](features/frontend-menu.md) |
 
 ## Shared Conventions
 - Bun for all installs; `bun add <pkg> --filter <workspace>`

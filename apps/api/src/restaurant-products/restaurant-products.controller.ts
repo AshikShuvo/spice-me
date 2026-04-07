@@ -33,7 +33,9 @@ export class RestaurantProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.RESTAURANT_ADMIN)
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'All linked products for restaurant admin (incl. unavailable)' })
+  @ApiOperation({
+    summary: 'All linked products for restaurant admin (incl. unavailable)',
+  })
   findAllManaged(
     @Param('restaurantId') restaurantId: string,
     @CurrentUser() user: JwtUser,

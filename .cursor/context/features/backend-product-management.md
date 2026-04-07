@@ -33,6 +33,7 @@ Global catalog managed by **ADMIN**: categories, subcategories, allergy items, p
 | `apps/api/src/allergy-items/allergy-items.service.spec.ts` | Unit tests |
 | `apps/api/src/products/products.service.spec.ts` | Unit tests |
 | `apps/api/src/restaurant-products/restaurant-products.service.spec.ts` | Unit tests |
+| `apps/api/src/menu/*` | Public `GET /menu` (global or restaurant-scoped catalog for browse UI) |
 
 ## API Contract
 
@@ -79,6 +80,12 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 | `DELETE` | `/products/:id/allergy-items/:allergyItemId` | ADMIN | Remove link |
 
 **Response shape (`ProductProfile`):** includes `pricing: { hasVariants, basePrice, salePrice, variants[] }`. If any **active** variant exists, `hasVariants` is true and product-level `basePrice`/`salePrice` in the envelope are `null` (variant prices used). Otherwise product-level decimals apply. Money values are **strings** (decimal serialization).
+
+### Menu (public browse)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/menu` | public | Full menu payload for customer browse UI (unpaginated). Query: optional `restaurantCode` (e.g. `RQ0001`). Without code: all **published + active** products. With code: products linked to that **active** restaurant with `RestaurantProduct.isAvailable` (same rules as restaurant menu). Returns `scope`, optional `restaurant`, `categories` (only categories that appear on the menu, each with active ordered `subCategories`), and `products` as `ProductProfile[]`. **404** if `restaurantCode` does not match an active restaurant. |
 
 ### Restaurant products
 

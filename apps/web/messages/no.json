@@ -15,5 +15,17 @@
   "common": {
     "loading": "Laster...",
     "error": "Noe gikk galt"
+  },
+  "menu": {
+    "title": "Meny",
+    "all": "Alle",
+    "other_section": "Annet",
+    "empty": "Ingen retter i denne menyen ennå.",
+    "fetch_error": "Vi kunne ikke laste menyen. Prøv igjen senere.",
+    "restaurant_not_found": "Restaurant ikke funnet.",
+    "no_products_category": "Ingen retter i denne kategorien.",
+    "back_menu": "Se full meny",
+    "no_price": "Ingen pris",
+    "variant_count": "{count, plural, one {# variant} other {# varianter}}"
   }
 }

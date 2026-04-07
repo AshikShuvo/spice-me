@@ -15,5 +15,17 @@
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong"
+  },
+  "menu": {
+    "title": "Menu",
+    "all": "All",
+    "other_section": "Other",
+    "empty": "No dishes in this menu yet.",
+    "fetch_error": "We could not load the menu. Please try again later.",
+    "restaurant_not_found": "Restaurant not found.",
+    "no_products_category": "No dishes in this category.",
+    "back_menu": "View full menu",
+    "no_price": "No price",
+    "variant_count": "{count, plural, one {# variant} other {# variants}}"
   }
 }

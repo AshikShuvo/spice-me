@@ -17,7 +17,7 @@ import type { UpdateProductDto } from './dto/update-product.dto.js';
 import type { UpdateProductPublishDto } from './dto/update-product-publish.dto.js';
 import type { UpdateVariantDto } from './dto/update-variant.dto.js';
 
-const PRODUCT_INCLUDE = {
+export const PRODUCT_INCLUDE = {
   category: { select: { id: true, name: true } },
   subCategory: { select: { id: true, name: true } },
   variants: { orderBy: { sortOrder: 'asc' as const } },
