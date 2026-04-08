@@ -12,6 +12,7 @@ const nextConfig = {
       /next-intl\/dist\/esm\/production\/extractor\/format\/index\.js/;
     return config;
   },
+  allowedDevOrigins: ['172.16.212.131']
 };
 
 export default withNextIntl(nextConfig);
