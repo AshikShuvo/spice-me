@@ -23,11 +23,11 @@ export class CreateVariantDto {
   @ApiProperty({ example: 17.99 })
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  basePrice!: number;
+  regularPrice!: number;
 
   @ApiPropertyOptional({ example: 14.99 })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  salePrice?: number;
+  offerPrice?: number;
 }

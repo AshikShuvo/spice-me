@@ -60,11 +60,11 @@ function buildProductFormDefaults(p: ProductProfile): UpdateProductFormValues {
     imageUrl: p.imageUrl,
     categoryId: p.categoryId,
     subCategoryId: p.subCategoryId ?? undefined,
-    basePrice: p.pricing.basePrice
-      ? Number.parseFloat(p.pricing.basePrice)
+    regularPrice: p.pricing.regularPrice
+      ? Number.parseFloat(p.pricing.regularPrice)
       : undefined,
-    salePrice: p.pricing.salePrice
-      ? Number.parseFloat(p.pricing.salePrice)
+    offerPrice: p.pricing.offerPrice
+      ? Number.parseFloat(p.pricing.offerPrice)
       : undefined,
   };
 }
@@ -90,7 +90,7 @@ export function ProductDetailClient({
   const [variantBusyId, setVariantBusyId] = useState<string | null>(null);
   const [allergyBusyId, setAllergyBusyId] = useState<string | null>(null);
 
-  const hasVariants = product.pricing.hasVariants;
+  const hasVariantRows = product.pricing.variants.length > 0;
 
   const form = useForm<UpdateProductFormValues, unknown, UpdateProductInput>({
     resolver: zodResolver(updateProductSchema),
@@ -143,6 +143,20 @@ export function ProductDetailClient({
       setPublishError(e instanceof Error ? e.message : "Failed to update publish status");
     } finally {
       setPublishBusy(false);
+    }
+  }
+
+  async function handleSetDefaultVariant(variantId: string) {
+    setVariantBusyId(variantId);
+    try {
+      const updated = await productService.updateVariant(
+        product.id,
+        variantId,
+        { isDefault: true },
+      );
+      setProduct(updated);
+    } finally {
+      setVariantBusyId(null);
     }
   }
 
@@ -364,17 +378,17 @@ export function ProductDetailClient({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="basePrice"
+                name="regularPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Base price (£)</FormLabel>
+                    <FormLabel>Regular price (£)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min={0}
                         step={0.01}
                         placeholder="0.00"
-                        disabled={hasVariants}
+                        disabled={hasVariantRows}
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(
@@ -385,7 +399,7 @@ export function ProductDetailClient({
                         }
                       />
                     </FormControl>
-                    {hasVariants && (
+                    {hasVariantRows && (
                       <FormDescription className="text-caption">
                         Disabled — pricing is set per variant
                       </FormDescription>
@@ -396,17 +410,17 @@ export function ProductDetailClient({
               />
               <FormField
                 control={form.control}
-                name="salePrice"
+                name="offerPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sale price (£)</FormLabel>
+                    <FormLabel>Offer price (£)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min={0}
                         step={0.01}
                         placeholder="0.00"
-                        disabled={hasVariants}
+                        disabled={hasVariantRows}
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(
@@ -448,7 +462,7 @@ export function ProductDetailClient({
             Add variant
           </Button>
         </div>
-        {!hasVariants && (
+        {!hasVariantRows && (
           <p className="mb-4 text-caption text-neutral-30">
             No variants yet. Add variants to switch to per-variant pricing.
           </p>
@@ -475,8 +489,9 @@ export function ProductDetailClient({
               headers={[
                 "Name",
                 "Sort",
-                "Base Price",
-                "Sale Price",
+                "Regular",
+                "Offer",
+                "Default",
                 "Active",
                 "Actions",
               ]}
@@ -488,10 +503,28 @@ export function ProductDetailClient({
                     {v.sortOrder}
                   </TableCell>
                   <TableCell className="text-body text-coal">
-                    £{v.basePrice}
+                    £{v.regularPrice}
                   </TableCell>
                   <TableCell className="text-body text-neutral-30">
-                    {v.salePrice ? `£${v.salePrice}` : "—"}
+                    {v.offerPrice ? `£${v.offerPrice}` : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {v.isDefault ? (
+                      <Badge variant="secondary">Menu default</Badge>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto px-2 py-1 text-caption"
+                        disabled={
+                          variantBusyId === v.id || !v.isActive
+                        }
+                        onClick={() => void handleSetDefaultVariant(v.id)}
+                      >
+                        Set default
+                      </Button>
+                    )}
                   </TableCell>
                   <TableCell>
                     <StatusBadge isActive={v.isActive} />

@@ -22,9 +22,16 @@ export type ProductVariantProfile = {
   id: string;
   name: string;
   sortOrder: number;
-  basePrice: string;
-  salePrice: string | null;
+  regularPrice: string;
+  offerPrice: string | null;
   isActive: boolean;
+  isDefault: boolean;
+};
+
+/** Menu-friendly price row: simple product or default variant. */
+export type ProductPriceDisplay = {
+  regularPrice: string | null;
+  offerPrice: string | null;
 };
 
 export type ProductProfile = {
@@ -40,8 +47,9 @@ export type ProductProfile = {
   subCategory: { id: string; name: string } | null;
   pricing: {
     hasVariants: boolean;
-    basePrice: string | null;
-    salePrice: string | null;
+    regularPrice: string | null;
+    offerPrice: string | null;
+    display: ProductPriceDisplay;
     variants: ProductVariantProfile[];
   };
   allergyItems: Array<{ id: string; name: string; iconUrl: string | null }>;
@@ -65,8 +73,8 @@ export type ProductWithRelations = {
   subCategoryId: string | null;
   isPublished: boolean;
   isActive: boolean;
-  basePrice: { toString(): string } | null;
-  salePrice: { toString(): string } | null;
+  regularPrice: { toString(): string } | null;
+  offerPrice: { toString(): string } | null;
   createdAt: Date;
   updatedAt: Date;
   category: { id: string; name: string };
@@ -75,9 +83,10 @@ export type ProductWithRelations = {
     id: string;
     name: string;
     sortOrder: number;
-    basePrice: { toString(): string };
-    salePrice: { toString(): string } | null;
+    regularPrice: { toString(): string };
+    offerPrice: { toString(): string } | null;
     isActive: boolean;
+    isDefault: boolean;
   }>;
   allergyItems: Array<{
     allergyItem: {
@@ -92,22 +101,65 @@ export type ProductWithRelations = {
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Throws BadRequestException when salePrice is set but >= basePrice. */
-  private assertPricing(
-    basePrice: number | undefined | null,
-    salePrice: number | undefined | null,
+  /** Throws when offerPrice is set but not strictly below regularPrice. */
+  private assertOfferPricing(
+    regularPrice: number | undefined | null,
+    offerPrice: number | undefined | null,
   ): void {
     if (
-      salePrice !== undefined &&
-      salePrice !== null &&
-      basePrice !== undefined &&
-      basePrice !== null &&
-      salePrice >= basePrice
+      offerPrice !== undefined &&
+      offerPrice !== null &&
+      regularPrice !== undefined &&
+      regularPrice !== null &&
+      offerPrice >= regularPrice
     ) {
       throw new BadRequestException(
-        'Sale price must be less than the base price',
+        'Offer price must be less than the regular price',
       );
     }
+  }
+
+  /** Exactly one active variant is default; clear defaults when none active. */
+  private async reconcileVariantDefaults(productId: string): Promise<void> {
+    const variants = await this.prisma.productVariant.findMany({
+      where: { productId },
+      orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
+    });
+    const active = variants.filter((v) => v.isActive);
+    if (active.length === 0) {
+      if (variants.some((v) => v.isDefault)) {
+        await this.prisma.productVariant.updateMany({
+          where: { productId },
+          data: { isDefault: false },
+        });
+      }
+      return;
+    }
+    const activeDefaults = active.filter((v) => v.isDefault);
+    let keepId: string;
+    if (activeDefaults.length === 0) {
+      keepId = active[0]!.id;
+    } else if (activeDefaults.length === 1) {
+      keepId = activeDefaults[0]!.id;
+    } else {
+      activeDefaults.sort(
+        (a, b) =>
+          a.sortOrder !== b.sortOrder
+            ? a.sortOrder - b.sortOrder
+            : a.id.localeCompare(b.id),
+      );
+      keepId = activeDefaults[0]!.id;
+    }
+    await this.prisma.$transaction([
+      this.prisma.productVariant.updateMany({
+        where: { productId },
+        data: { isDefault: false },
+      }),
+      this.prisma.productVariant.update({
+        where: { id: keepId },
+        data: { isDefault: true },
+      }),
+    ]);
   }
 
   private handleVariantUniqueViolation(error: unknown): never {
@@ -126,8 +178,25 @@ export class ProductsService {
   }
 
   toProfile(p: ProductWithRelations): ProductProfile {
+    const anyVariantRows = p.variants.length > 0;
     const activeVariants = p.variants.filter((v) => v.isActive);
     const hasVariants = activeVariants.length > 0;
+
+    let display: ProductPriceDisplay;
+    if (hasVariants) {
+      const def =
+        activeVariants.find((v) => v.isDefault) ?? activeVariants[0]!;
+      display = {
+        regularPrice: def.regularPrice.toString(),
+        offerPrice: decToString(def.offerPrice),
+      };
+    } else {
+      display = {
+        regularPrice: decToString(p.regularPrice),
+        offerPrice: decToString(p.offerPrice),
+      };
+    }
+
     return {
       id: p.id,
       title: p.title,
@@ -141,15 +210,17 @@ export class ProductsService {
       subCategory: p.subCategory,
       pricing: {
         hasVariants,
-        basePrice: hasVariants ? null : decToString(p.basePrice),
-        salePrice: hasVariants ? null : decToString(p.salePrice),
+        regularPrice: anyVariantRows ? null : decToString(p.regularPrice),
+        offerPrice: anyVariantRows ? null : decToString(p.offerPrice),
+        display,
         variants: p.variants.map((v) => ({
           id: v.id,
           name: v.name,
           sortOrder: v.sortOrder,
-          basePrice: v.basePrice.toString(),
-          salePrice: decToString(v.salePrice),
+          regularPrice: v.regularPrice.toString(),
+          offerPrice: decToString(v.offerPrice),
           isActive: v.isActive,
+          isDefault: v.isDefault,
         })),
       },
       allergyItems: p.allergyItems.map((pai) => ({
@@ -180,7 +251,7 @@ export class ProductsService {
   }
 
   async create(dto: CreateProductDto): Promise<ProductProfile> {
-    this.assertPricing(dto.basePrice, dto.salePrice);
+    this.assertOfferPricing(dto.regularPrice, dto.offerPrice);
     const category = await this.prisma.category.findUnique({
       where: { id: dto.categoryId },
     });
@@ -200,8 +271,8 @@ export class ProductsService {
         imageUrl: dto.imageUrl.trim(),
         categoryId: dto.categoryId,
         subCategoryId: dto.subCategoryId,
-        basePrice: dto.basePrice,
-        salePrice: dto.salePrice,
+        regularPrice: dto.regularPrice,
+        offerPrice: dto.offerPrice,
       },
       include: PRODUCT_INCLUDE,
     });
@@ -269,10 +340,21 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<ProductProfile> {
-    this.assertPricing(dto.basePrice, dto.salePrice);
+    this.assertOfferPricing(dto.regularPrice, dto.offerPrice);
     const existing = await this.prisma.product.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException('Product not found');
+    }
+    const variantRowCount = await this.prisma.productVariant.count({
+      where: { productId: id },
+    });
+    if (
+      variantRowCount > 0 &&
+      (dto.regularPrice !== undefined || dto.offerPrice !== undefined)
+    ) {
+      throw new BadRequestException(
+        'Cannot set product prices while variants exist. Remove variants first.',
+      );
     }
     const categoryId = dto.categoryId ?? existing.categoryId;
     if (dto.categoryId) {
@@ -302,8 +384,8 @@ export class ProductsService {
         ...(dto.subCategoryId !== undefined && {
           subCategoryId: dto.subCategoryId,
         }),
-        ...(dto.basePrice !== undefined && { basePrice: dto.basePrice }),
-        ...(dto.salePrice !== undefined && { salePrice: dto.salePrice }),
+        ...(dto.regularPrice !== undefined && { regularPrice: dto.regularPrice }),
+        ...(dto.offerPrice !== undefined && { offerPrice: dto.offerPrice }),
       },
       include: PRODUCT_INCLUDE,
     });
@@ -325,12 +407,28 @@ export class ProductsService {
       throw new BadRequestException('Cannot publish an inactive product');
     }
     if (dto.isPublished) {
-      const hasPrice = existing.basePrice !== null;
-      const hasVariant = existing.variants.length > 0;
-      if (!hasPrice && !hasVariant) {
-        throw new BadRequestException(
-          'Product must have a base price or at least one active variant before publishing',
-        );
+      await this.reconcileVariantDefaults(id);
+      const refreshed = await this.prisma.product.findUnique({
+        where: { id },
+        include: { variants: true },
+      });
+      if (!refreshed) {
+        throw new NotFoundException('Product not found');
+      }
+      const active = refreshed.variants.filter((v) => v.isActive);
+      if (active.length === 0) {
+        if (refreshed.regularPrice === null) {
+          throw new BadRequestException(
+            'Product must have a regular price or at least one active variant before publishing',
+          );
+        }
+      } else {
+        const defaults = active.filter((v) => v.isDefault);
+        if (defaults.length !== 1) {
+          throw new BadRequestException(
+            'Product must have exactly one active default variant before publishing',
+          );
+        }
       }
     }
     const updated = await this.prisma.product.update({
@@ -357,13 +455,17 @@ export class ProductsService {
     productId: string,
     dto: CreateVariantDto,
   ): Promise<ProductProfile> {
-    this.assertPricing(dto.basePrice, dto.salePrice);
+    this.assertOfferPricing(dto.regularPrice, dto.offerPrice);
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
     });
     if (!product) {
       throw new NotFoundException('Product not found');
     }
+    const priorCount = await this.prisma.productVariant.count({
+      where: { productId },
+    });
+    const isFirstVariant = priorCount === 0;
     try {
       await this.prisma.$transaction([
         this.prisma.productVariant.create({
@@ -371,18 +473,20 @@ export class ProductsService {
             productId,
             name: dto.name.trim(),
             sortOrder: dto.sortOrder ?? 0,
-            basePrice: dto.basePrice,
-            salePrice: dto.salePrice,
+            regularPrice: dto.regularPrice,
+            offerPrice: dto.offerPrice,
+            isDefault: isFirstVariant,
           },
         }),
         this.prisma.product.update({
           where: { id: productId },
-          data: { basePrice: null, salePrice: null },
+          data: { regularPrice: null, offerPrice: null },
         }),
       ]);
     } catch (e) {
       this.handleVariantUniqueViolation(e);
     }
+    await this.reconcileVariantDefaults(productId);
     const full = await this.prisma.product.findUniqueOrThrow({
       where: { id: productId },
       include: PRODUCT_INCLUDE,
@@ -395,27 +499,66 @@ export class ProductsService {
     variantId: string,
     dto: UpdateVariantDto,
   ): Promise<ProductProfile> {
-    this.assertPricing(dto.basePrice, dto.salePrice);
     const variant = await this.prisma.productVariant.findFirst({
       where: { id: variantId, productId },
     });
     if (!variant) {
       throw new NotFoundException('Variant not found');
     }
+    const nextRegular =
+      dto.regularPrice !== undefined
+        ? dto.regularPrice
+        : Number(variant.regularPrice);
+    const nextOffer =
+      dto.offerPrice !== undefined
+        ? dto.offerPrice
+        : variant.offerPrice !== null
+          ? Number(variant.offerPrice)
+          : null;
+    this.assertOfferPricing(nextRegular, nextOffer);
+
     try {
-      await this.prisma.productVariant.update({
-        where: { id: variantId },
-        data: {
-          ...(dto.name !== undefined && { name: dto.name.trim() }),
-          ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
-          ...(dto.basePrice !== undefined && { basePrice: dto.basePrice }),
-          ...(dto.salePrice !== undefined && { salePrice: dto.salePrice }),
-          ...(dto.isActive !== undefined && { isActive: dto.isActive }),
-        },
-      });
+      if (dto.isDefault === true) {
+        await this.prisma.$transaction([
+          this.prisma.productVariant.updateMany({
+            where: { productId },
+            data: { isDefault: false },
+          }),
+          this.prisma.productVariant.update({
+            where: { id: variantId },
+            data: {
+              ...(dto.name !== undefined && { name: dto.name.trim() }),
+              ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
+              ...(dto.regularPrice !== undefined && {
+                regularPrice: dto.regularPrice,
+              }),
+              ...(dto.offerPrice !== undefined && {
+                offerPrice: dto.offerPrice,
+              }),
+              ...(dto.isActive !== undefined && { isActive: dto.isActive }),
+              isDefault: true,
+            },
+          }),
+        ]);
+      } else {
+        await this.prisma.productVariant.update({
+          where: { id: variantId },
+          data: {
+            ...(dto.name !== undefined && { name: dto.name.trim() }),
+            ...(dto.sortOrder !== undefined && { sortOrder: dto.sortOrder }),
+            ...(dto.regularPrice !== undefined && {
+              regularPrice: dto.regularPrice,
+            }),
+            ...(dto.offerPrice !== undefined && { offerPrice: dto.offerPrice }),
+            ...(dto.isActive !== undefined && { isActive: dto.isActive }),
+            ...(dto.isDefault === false && { isDefault: false }),
+          },
+        });
+      }
     } catch (e) {
       this.handleVariantUniqueViolation(e);
     }
+    await this.reconcileVariantDefaults(productId);
     const full = await this.prisma.product.findUniqueOrThrow({
       where: { id: productId },
       include: PRODUCT_INCLUDE,
@@ -437,7 +580,7 @@ export class ProductsService {
     const [product, otherActive] = await Promise.all([
       this.prisma.product.findUnique({
         where: { id: productId },
-        select: { basePrice: true },
+        select: { regularPrice: true },
       }),
       this.prisma.productVariant.count({
         where: { productId, isActive: true, id: { not: variantId } },
@@ -446,12 +589,13 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-    if (otherActive === 0 && product.basePrice === null) {
+    if (otherActive === 0 && product.regularPrice === null) {
       throw new BadRequestException(
-        'Cannot remove the last variant from a product without a base price. Set a base price first.',
+        'Cannot remove the last variant from a product without a regular price. Set a product regular price first.',
       );
     }
     await this.prisma.productVariant.delete({ where: { id: variantId } });
+    await this.reconcileVariantDefaults(productId);
     const full = await this.prisma.product.findUniqueOrThrow({
       where: { id: productId },
       include: PRODUCT_INCLUDE,

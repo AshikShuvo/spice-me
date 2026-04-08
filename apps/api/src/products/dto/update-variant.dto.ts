@@ -6,4 +6,8 @@ export class UpdateVariantDto extends PartialType(CreateVariantDto) {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isDefault?: boolean;
 }

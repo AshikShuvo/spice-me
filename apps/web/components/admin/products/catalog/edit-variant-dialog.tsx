@@ -50,9 +50,10 @@ export function EditVariantDialog({
     defaultValues: {
       name: "",
       sortOrder: 0,
-      basePrice: undefined,
-      salePrice: undefined,
+      regularPrice: undefined,
+      offerPrice: undefined,
       isActive: true,
+      isDefault: false,
     },
   });
 
@@ -61,11 +62,12 @@ export function EditVariantDialog({
       form.reset({
         name: variant.name,
         sortOrder: variant.sortOrder,
-        basePrice: Number.parseFloat(variant.basePrice),
-        salePrice: variant.salePrice
-          ? Number.parseFloat(variant.salePrice)
+        regularPrice: Number.parseFloat(variant.regularPrice),
+        offerPrice: variant.offerPrice
+          ? Number.parseFloat(variant.offerPrice)
           : undefined,
         isActive: variant.isActive,
+        isDefault: variant.isDefault,
       });
     }
   }, [variant, form]);
@@ -94,7 +96,7 @@ export function EditVariantDialog({
         <DialogHeader>
           <DialogTitle>Edit variant</DialogTitle>
           <DialogDescription>
-            Update the variant name, pricing, and active status.
+            Update the variant name, pricing, default-for-menu flag, and active status.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -140,10 +142,10 @@ export function EditVariantDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="basePrice"
+                name="regularPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Base price (£)</FormLabel>
+                    <FormLabel>Regular price (£)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -166,10 +168,10 @@ export function EditVariantDialog({
               />
               <FormField
                 control={form.control}
-                name="salePrice"
+                name="offerPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sale price (£)</FormLabel>
+                    <FormLabel>Offer price (£)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -191,6 +193,22 @@ export function EditVariantDialog({
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="isDefault"
+              render={({ field }) => (
+                <FormItem className="flex items-center gap-2">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value ?? false}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel className="!mt-0">Default for menu price</FormLabel>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="isActive"

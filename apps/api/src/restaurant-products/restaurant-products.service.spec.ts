@@ -34,6 +34,11 @@ describe('RestaurantProductsService', () => {
     restaurantAdminAssignment: { findFirst: jest.fn() },
   };
 
+  const profileTimestamps = {
+    createdAt: new Date('2023-05-05T00:00:00.000Z'),
+    updatedAt: new Date('2023-05-05T00:00:00.000Z'),
+  };
+
   const toProfile = jest.fn((p: { id: string }) => ({
     id: p.id,
     title: 'T',
@@ -47,13 +52,13 @@ describe('RestaurantProductsService', () => {
     subCategory: null,
     pricing: {
       hasVariants: false,
-      basePrice: '10',
-      salePrice: null,
+      regularPrice: '10',
+      offerPrice: null,
+      display: { regularPrice: '10', offerPrice: null },
       variants: [],
     },
     allergyItems: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    ...profileTimestamps,
   }));
 
   const productsService = { toProfile };
@@ -62,6 +67,11 @@ describe('RestaurantProductsService', () => {
     userId: 'ra1',
     email: 'ra@x.com',
     role: Role.RESTAURANT_ADMIN,
+  };
+
+  const linkTimestamps = {
+    addedAt: new Date('2024-06-01T12:00:00.000Z'),
+    updatedAt: new Date('2024-06-01T12:00:00.000Z'),
   };
 
   beforeEach(async () => {
@@ -159,10 +169,40 @@ describe('RestaurantProductsService', () => {
         restaurantId: 'r1',
         productId: 'p1',
         isAvailable: true,
+        ...linkTimestamps,
+        product: { id: 'p1' },
       };
       prisma.restaurantProduct.create.mockResolvedValue(link);
       const out = await service.addProduct('r1', { productId: 'p1' }, raUser);
-      expect(out).toEqual(link);
+      expect(out).toEqual({
+        id: 'rp1',
+        restaurantId: 'r1',
+        productId: 'p1',
+        isAvailable: true,
+        addedAt: linkTimestamps.addedAt.toISOString(),
+        updatedAt: linkTimestamps.updatedAt.toISOString(),
+        product: {
+          id: 'p1',
+          title: 'T',
+          description: '1234567890ab',
+          imageUrl: 'u',
+          categoryId: 'c1',
+          subCategoryId: null,
+          isPublished: true,
+          isActive: true,
+          category: { id: 'c1', name: 'Cat' },
+          subCategory: null,
+          pricing: {
+            hasVariants: false,
+            regularPrice: '10',
+            offerPrice: null,
+            display: { regularPrice: '10', offerPrice: null },
+            variants: [],
+          },
+          allergyItems: [],
+          ...profileTimestamps,
+        },
+      });
     });
 
     it('throws ConflictException on P2002', async () => {
@@ -213,7 +253,11 @@ describe('RestaurantProductsService', () => {
       });
       prisma.restaurantProduct.update.mockResolvedValue({
         id: 'rp1',
+        restaurantId: 'r1',
+        productId: 'p1',
         isAvailable: false,
+        ...linkTimestamps,
+        product: { id: 'p1' },
       });
       const out = await service.updateAvailability(
         'r1',
@@ -222,6 +266,7 @@ describe('RestaurantProductsService', () => {
         raUser,
       );
       expect(out.isAvailable).toBe(false);
+      expect(out.addedAt).toBe(linkTimestamps.addedAt.toISOString());
     });
   });
 

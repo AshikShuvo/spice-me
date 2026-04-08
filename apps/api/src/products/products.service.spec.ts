@@ -35,8 +35,10 @@ describe('ProductsService', () => {
     },
     productVariant: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
     },
@@ -60,8 +62,8 @@ describe('ProductsService', () => {
     subCategoryId: null,
     isPublished: false,
     isActive: true,
-    basePrice: d('12.00'),
-    salePrice: null,
+    regularPrice: d('12.00'),
+    offerPrice: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     category: { id: 'c1', name: 'Pizza' },
@@ -73,6 +75,8 @@ describe('ProductsService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    prisma.productVariant.findMany.mockResolvedValue([]);
+    prisma.productVariant.updateMany.mockResolvedValue({ count: 0 });
     prisma.$transaction.mockImplementation(async (ops: unknown[]) =>
       Promise.all(ops),
     );
@@ -90,33 +94,38 @@ describe('ProductsService', () => {
   });
 
   describe('toProfile', () => {
-    it('hasVariants false uses product basePrice', () => {
+    it('hasVariants false uses product regularPrice for envelope and display', () => {
       const p = baseRelations();
       const profile = service.toProfile(p);
       expect(profile.pricing.hasVariants).toBe(false);
-      expect(profile.pricing.basePrice).toBe('12.00');
+      expect(profile.pricing.regularPrice).toBe('12.00');
+      expect(profile.pricing.display.regularPrice).toBe('12.00');
+      expect(profile.pricing.display.offerPrice).toBeNull();
       expect(profile.pricing.variants).toHaveLength(0);
     });
 
-    it('hasVariants true nulls product-level prices in envelope', () => {
+    it('hasVariants true nulls product-level prices; display uses default variant', () => {
       const p = baseRelations({
-        basePrice: d('99'),
+        regularPrice: d('99'),
         variants: [
           {
             id: 'v1',
             name: 'L',
             sortOrder: 0,
-            basePrice: d('15'),
-            salePrice: null,
+            regularPrice: d('15'),
+            offerPrice: null,
             isActive: true,
+            isDefault: true,
           },
         ],
       });
       const profile = service.toProfile(p);
       expect(profile.pricing.hasVariants).toBe(true);
-      expect(profile.pricing.basePrice).toBeNull();
-      expect(profile.pricing.salePrice).toBeNull();
-      expect(profile.pricing.variants[0].basePrice).toBe('15');
+      expect(profile.pricing.regularPrice).toBeNull();
+      expect(profile.pricing.offerPrice).toBeNull();
+      expect(profile.pricing.display.regularPrice).toBe('15');
+      expect(profile.pricing.variants[0].regularPrice).toBe('15');
+      expect(profile.pricing.variants[0].isDefault).toBe(true);
     });
   });
 
@@ -130,7 +139,7 @@ describe('ProductsService', () => {
         description: '1234567890ab',
         imageUrl: 'u',
         categoryId: 'c1',
-        basePrice: 12,
+        regularPrice: 12,
       });
       expect(out.id).toBe('p1');
       expect(prisma.product.create).toHaveBeenCalled();
@@ -148,15 +157,15 @@ describe('ProductsService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('throws when salePrice >= basePrice', async () => {
+    it('throws when offerPrice >= regularPrice', async () => {
       await expect(
         service.create({
           title: 'T',
           description: '1234567890ab',
           imageUrl: 'u',
           categoryId: 'c1',
-          basePrice: 10,
-          salePrice: 10,
+          regularPrice: 10,
+          offerPrice: 10,
         }),
       ).rejects.toThrow(BadRequestException);
     });
@@ -270,48 +279,74 @@ describe('ProductsService', () => {
       expect(out.title).toBe('New');
     });
 
-    it('throws when salePrice >= basePrice', async () => {
+    it('throws when offerPrice >= regularPrice', async () => {
       await expect(
-        service.update('p1', { basePrice: 5, salePrice: 5 }),
+        service.update('p1', { regularPrice: 5, offerPrice: 5 }),
       ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('publish', () => {
-    // publish now uses a single findUnique with active-variant include
-    it('allows publish with basePrice', async () => {
-      prisma.product.findUnique.mockResolvedValue(
-        baseRelations({ basePrice: d('10'), isActive: true, variants: [] }),
-      );
+    it('allows publish with product regularPrice', async () => {
+      const row = baseRelations({
+        regularPrice: d('10'),
+        isActive: true,
+        variants: [],
+      });
+      prisma.product.findUnique
+        .mockResolvedValueOnce(row)
+        .mockResolvedValueOnce(row);
       prisma.product.update.mockResolvedValue(
-        baseRelations({ isPublished: true, basePrice: d('10') }),
+        baseRelations({ isPublished: true, regularPrice: d('10') }),
       );
       const out = await service.publish('p1', { isPublished: true });
       expect(out.isPublished).toBe(true);
-      expect(prisma.product.findUnique).toHaveBeenCalledTimes(1);
+      expect(prisma.product.findUnique).toHaveBeenCalledTimes(2);
     });
 
-    it('allows publish with active variant and no basePrice', async () => {
-      const variantRow = {
+    it('allows publish with active variant and default set', async () => {
+      const variantBefore = {
         id: 'v1',
         name: 'S',
         sortOrder: 0,
-        basePrice: d('5'),
-        salePrice: null,
+        regularPrice: d('5'),
+        offerPrice: null,
         isActive: true,
+        isDefault: false,
       };
-      prisma.product.findUnique.mockResolvedValue(
-        baseRelations({
-          basePrice: null,
-          variants: [variantRow],
+      const variantAfter = { ...variantBefore, isDefault: true };
+      prisma.product.findUnique
+        .mockResolvedValueOnce(
+          baseRelations({
+            regularPrice: null,
+            variants: [variantBefore],
+            isActive: true,
+          }),
+        )
+        .mockResolvedValueOnce(
+          baseRelations({
+            regularPrice: null,
+            variants: [variantAfter],
+            isActive: true,
+          }),
+        );
+      prisma.productVariant.findMany.mockResolvedValue([
+        {
+          id: 'v1',
+          productId: 'p1',
+          name: 'S',
+          sortOrder: 0,
+          regularPrice: d('5'),
+          offerPrice: null,
           isActive: true,
-        }),
-      );
+          isDefault: false,
+        },
+      ]);
       prisma.product.update.mockResolvedValue(
         baseRelations({
           isPublished: true,
-          basePrice: null,
-          variants: [variantRow],
+          regularPrice: null,
+          variants: [variantAfter],
         }),
       );
       const out = await service.publish('p1', { isPublished: true });
@@ -319,9 +354,13 @@ describe('ProductsService', () => {
     });
 
     it('rejects publish without price or variant', async () => {
-      prisma.product.findUnique.mockResolvedValue(
-        baseRelations({ basePrice: null, variants: [], isActive: true }),
-      );
+      prisma.product.findUnique
+        .mockResolvedValueOnce(
+          baseRelations({ regularPrice: null, variants: [], isActive: true }),
+        )
+        .mockResolvedValueOnce(
+          baseRelations({ regularPrice: null, variants: [], isActive: true }),
+        );
       await expect(
         service.publish('p1', { isPublished: true }),
       ).rejects.toThrow(BadRequestException);
@@ -329,7 +368,7 @@ describe('ProductsService', () => {
 
     it('rejects publish when inactive', async () => {
       prisma.product.findUnique.mockResolvedValue(
-        baseRelations({ isActive: false, basePrice: d('1'), variants: [] }),
+        baseRelations({ isActive: false, regularPrice: d('1'), variants: [] }),
       );
       await expect(
         service.publish('p1', { isPublished: true }),
@@ -341,12 +380,12 @@ describe('ProductsService', () => {
         baseRelations({
           isActive: true,
           isPublished: true,
-          basePrice: null,
+          regularPrice: null,
           variants: [],
         }),
       );
       prisma.product.update.mockResolvedValue(
-        baseRelations({ isPublished: false, basePrice: null }),
+        baseRelations({ isPublished: false, regularPrice: null }),
       );
       const out = await service.publish('p1', { isPublished: false });
       expect(out.isPublished).toBe(false);
@@ -372,22 +411,23 @@ describe('ProductsService', () => {
       prisma.productVariant.create.mockResolvedValue({});
       prisma.product.update.mockResolvedValue({});
       const full = baseRelations({
-        basePrice: null,
+        regularPrice: null,
         variants: [
           {
             id: 'v1',
             name: 'L',
             sortOrder: 0,
-            basePrice: d('10'),
-            salePrice: null,
+            regularPrice: d('10'),
+            offerPrice: null,
             isActive: true,
+            isDefault: true,
           },
         ],
       });
       prisma.product.findUniqueOrThrow.mockResolvedValue(full);
       const out = await service.addVariant('p1', {
         name: 'L',
-        basePrice: 10,
+        regularPrice: 10,
       });
       expect(out.pricing.hasVariants).toBe(true);
       expect(prisma.$transaction).toHaveBeenCalled();
@@ -396,7 +436,7 @@ describe('ProductsService', () => {
     it('throws when product missing', async () => {
       prisma.product.findUnique.mockResolvedValue(null);
       await expect(
-        service.addVariant('x', { name: 'L', basePrice: 1 }),
+        service.addVariant('x', { name: 'L', regularPrice: 1 }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -407,13 +447,17 @@ describe('ProductsService', () => {
         meta: { target: ['productId', 'name'] },
       });
       await expect(
-        service.addVariant('p1', { name: 'L', basePrice: 1 }),
+        service.addVariant('p1', { name: 'L', regularPrice: 1 }),
       ).rejects.toThrow(ConflictException);
     });
 
-    it('throws when salePrice >= basePrice', async () => {
+    it('throws when offerPrice >= regularPrice', async () => {
       await expect(
-        service.addVariant('p1', { name: 'L', basePrice: 5, salePrice: 6 }),
+        service.addVariant('p1', {
+          name: 'L',
+          regularPrice: 5,
+          offerPrice: 6,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -430,15 +474,16 @@ describe('ProductsService', () => {
       prisma.productVariant.findFirst.mockResolvedValue({ id: 'v1' });
       prisma.productVariant.update.mockResolvedValue({});
       const full = baseRelations({
-        basePrice: null,
+        regularPrice: null,
         variants: [
           {
             id: 'v1',
             name: 'XL',
             sortOrder: 0,
-            basePrice: d('12'),
-            salePrice: null,
+            regularPrice: d('12'),
+            offerPrice: null,
             isActive: true,
+            isDefault: true,
           },
         ],
       });
@@ -447,27 +492,30 @@ describe('ProductsService', () => {
       expect(out.pricing.variants[0].name).toBe('XL');
     });
 
-    it('throws when salePrice >= basePrice', async () => {
+    it('throws when offerPrice >= regularPrice', async () => {
       await expect(
-        service.updateVariant('p1', 'v1', { basePrice: 10, salePrice: 10 }),
+        service.updateVariant('p1', 'v1', {
+          regularPrice: 10,
+          offerPrice: 10,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('removeVariant', () => {
-    it('throws when last active variant and no basePrice', async () => {
+    it('throws when last active variant and no regularPrice', async () => {
       prisma.productVariant.findFirst.mockResolvedValue({ id: 'v1' });
-      // parallel: product (select basePrice) + variant count
-      prisma.product.findUnique.mockResolvedValue({ basePrice: null });
+      // parallel: product (select regularPrice) + variant count
+      prisma.product.findUnique.mockResolvedValue({ regularPrice: null });
       prisma.productVariant.count.mockResolvedValue(0);
       await expect(service.removeVariant('p1', 'v1')).rejects.toThrow(
         BadRequestException,
       );
     });
 
-    it('deletes when basePrice set', async () => {
+    it('deletes when regularPrice set', async () => {
       prisma.productVariant.findFirst.mockResolvedValue({ id: 'v1' });
-      prisma.product.findUnique.mockResolvedValue({ basePrice: d('12.00') });
+      prisma.product.findUnique.mockResolvedValue({ regularPrice: d('12.00') });
       prisma.productVariant.count.mockResolvedValue(0);
       prisma.productVariant.delete.mockResolvedValue({});
       const full = baseRelations();

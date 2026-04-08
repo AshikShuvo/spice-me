@@ -112,11 +112,11 @@ model Product {
   categoryId    String
   subCategoryId String?
   isPublished   Boolean  @default(false)
-  isActive      Boolean  @default(true)
-  basePrice     Decimal? @db.Decimal(10, 2)
-  salePrice     Decimal? @db.Decimal(10, 2)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isActive       Boolean  @default(true)
+  regularPrice   Decimal? @db.Decimal(10, 2)
+  offerPrice     Decimal? @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   category           Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   subCategory        SubCategory?         @relation(fields: [subCategoryId], references: [id], onDelete: SetNull)
@@ -127,15 +127,16 @@ model Product {
 }
 
 model ProductVariant {
-  id        String   @id @default(cuid())
-  productId String
-  name      String
-  sortOrder Int      @default(0)
-  basePrice Decimal  @db.Decimal(10, 2)
-  salePrice Decimal? @db.Decimal(10, 2)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  productId    String
+  name         String
+  sortOrder    Int      @default(0)
+  regularPrice Decimal  @db.Decimal(10, 2)
+  offerPrice   Decimal? @db.Decimal(10, 2)
+  isDefault    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 

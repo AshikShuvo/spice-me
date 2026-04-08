@@ -7,19 +7,19 @@ const optionalSubCategoryId = z
   .transform((s) => (s === undefined || s === "" ? undefined : s))
   .pipe(z.string().min(1).optional());
 
-function salePriceCheck(data: {
-  basePrice?: number | null;
-  salePrice?: number | null;
+function offerPriceCheck(data: {
+  regularPrice?: number | null;
+  offerPrice?: number | null;
 }) {
-  const base = data.basePrice;
-  const sale = data.salePrice;
-  if (sale != null && base != null && sale >= base) return false;
+  const regular = data.regularPrice;
+  const offer = data.offerPrice;
+  if (offer != null && regular != null && offer >= regular) return false;
   return true;
 }
 
-const SALE_PRICE_REFINE = {
-  message: "Sale price must be less than base price",
-  path: ["salePrice"] as [string],
+const OFFER_PRICE_REFINE = {
+  message: "Offer price must be less than regular price",
+  path: ["offerPrice"] as [string],
 } as const;
 
 const priceField = z
@@ -39,10 +39,10 @@ export const createProductSchema = z
     imageUrl: z.string().url("Enter a valid image URL"),
     categoryId: z.string().min(1, "Select a category"),
     subCategoryId: optionalSubCategoryId,
-    basePrice: priceField.optional(),
-    salePrice: priceField.optional(),
+    regularPrice: priceField.optional(),
+    offerPrice: priceField.optional(),
   })
-  .refine(salePriceCheck, SALE_PRICE_REFINE);
+  .refine(offerPriceCheck, OFFER_PRICE_REFINE);
 
 export const updateProductSchema = z
   .object({
@@ -57,29 +57,30 @@ export const updateProductSchema = z
         s === undefined || s === null || s === "" ? undefined : s,
       )
       .pipe(z.string().min(1).optional()),
-    basePrice: priceField.optional().nullable(),
-    salePrice: priceField.optional().nullable(),
+    regularPrice: priceField.optional().nullable(),
+    offerPrice: priceField.optional().nullable(),
   })
-  .refine(salePriceCheck, SALE_PRICE_REFINE);
+  .refine(offerPriceCheck, OFFER_PRICE_REFINE);
 
 export const createVariantSchema = z
   .object({
     name: z.string().min(1, "Name is required"),
     sortOrder: z.number().int().min(0).optional(),
-    basePrice: priceField,
-    salePrice: priceField.optional(),
+    regularPrice: priceField,
+    offerPrice: priceField.optional(),
   })
-  .refine(salePriceCheck, SALE_PRICE_REFINE);
+  .refine(offerPriceCheck, OFFER_PRICE_REFINE);
 
 export const updateVariantSchema = z
   .object({
     name: z.string().min(1).optional(),
     sortOrder: z.number().int().min(0).optional(),
-    basePrice: priceField.optional(),
-    salePrice: priceField.optional().nullable(),
+    regularPrice: priceField.optional(),
+    offerPrice: priceField.optional().nullable(),
     isActive: z.boolean().optional(),
+    isDefault: z.boolean().optional(),
   })
-  .refine(salePriceCheck, SALE_PRICE_REFINE);
+  .refine(offerPriceCheck, OFFER_PRICE_REFINE);
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;

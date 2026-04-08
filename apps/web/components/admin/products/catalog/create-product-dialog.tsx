@@ -64,8 +64,8 @@ export function CreateProductDialog({
       imageUrl: "",
       categoryId: "",
       subCategoryId: undefined,
-      basePrice: undefined,
-      salePrice: undefined,
+      regularPrice: undefined,
+      offerPrice: undefined,
     },
   });
 
@@ -224,10 +224,10 @@ export function CreateProductDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="basePrice"
+                name="regularPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Base price (£)</FormLabel>
+                    <FormLabel>Regular price (£)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -253,10 +253,10 @@ export function CreateProductDialog({
               />
               <FormField
                 control={form.control}
-                name="salePrice"
+                name="offerPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sale price (£)</FormLabel>
+                    <FormLabel>Offer price (£)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

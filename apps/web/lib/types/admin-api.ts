@@ -82,9 +82,10 @@ export interface ProductVariantProfile {
   id: string;
   name: string;
   sortOrder: number;
-  basePrice: string;
-  salePrice: string | null;
+  regularPrice: string;
+  offerPrice: string | null;
   isActive: boolean;
+  isDefault: boolean;
 }
 
 export interface ProductProfile {
@@ -100,8 +101,13 @@ export interface ProductProfile {
   subCategory: { id: string; name: string } | null;
   pricing: {
     hasVariants: boolean;
-    basePrice: string | null;
-    salePrice: string | null;
+    regularPrice: string | null;
+    offerPrice: string | null;
+    /** Omitted by some cached responses; `ProductPrice` recomputes from envelope + variants. */
+    display?: {
+      regularPrice: string | null;
+      offerPrice: string | null;
+    };
     variants: ProductVariantProfile[];
   };
   allergyItems: Array<{ id: string; name: string; iconUrl: string | null }>;

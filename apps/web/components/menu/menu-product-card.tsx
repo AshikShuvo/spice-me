@@ -45,7 +45,6 @@ export function MenuProductCard({ product, priority = false }: Props) {
             className="text-[0.6875rem] font-medium md:text-xs lg:text-sm"
             labels={{
               noPrice: t("no_price"),
-              variantCount: (count) => t("variant_count", { count }),
             }}
           />
         </div>

@@ -38,11 +38,11 @@ export class CreateProductDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  basePrice?: number;
+  regularPrice?: number;
 
   @ApiPropertyOptional({ type: Number, example: 12.99 })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  salePrice?: number;
+  offerPrice?: number;
 }

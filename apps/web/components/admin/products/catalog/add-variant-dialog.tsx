@@ -46,8 +46,8 @@ export function AddVariantDialog({
     defaultValues: {
       name: "",
       sortOrder: 0,
-      basePrice: 0,
-      salePrice: undefined,
+      regularPrice: 0,
+      offerPrice: undefined,
     },
   });
 
@@ -116,10 +116,10 @@ export function AddVariantDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="basePrice"
+                name="regularPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Base price (£)</FormLabel>
+                    <FormLabel>Regular price (£)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -138,10 +138,10 @@ export function AddVariantDialog({
               />
               <FormField
                 control={form.control}
-                name="salePrice"
+                name="offerPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sale price (£)</FormLabel>
+                    <FormLabel>Offer price (£)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

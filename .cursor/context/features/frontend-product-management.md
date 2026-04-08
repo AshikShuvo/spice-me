@@ -24,7 +24,7 @@ A full "Products" section in the admin shell, supporting two roles:
 | `apps/web/lib/types/admin-api.ts` | Appended `SubCategoryProfile`, `CategoryProfile`, `AllergyItemProfile`, `ProductVariantProfile`, `ProductProfile`, `RestaurantProductManageRow` |
 | `apps/web/lib/validations/category.ts` | Zod schemas for create/update category and subcategory |
 | `apps/web/lib/validations/allergy-item.ts` | Zod schemas for create/update allergy items |
-| `apps/web/lib/validations/product.ts` | Zod schemas for create/update product and variants, with `salePrice < basePrice` refine |
+| `apps/web/lib/validations/product.ts` | Zod schemas for create/update product and variants, with `offerPrice < regularPrice` refine |
 
 ### Frontend — Services
 | File | Purpose |
@@ -42,7 +42,7 @@ A full "Products" section in the admin shell, supporting two roles:
 |---|---|
 | `apps/web/app/[locale]/(admin)/layout.tsx` | Added "Products" sidebar section with role-based links |
 | `apps/web/components/admin/products/product-status-badge.tsx` | Draft/Published/Inactive badge |
-| `apps/web/components/admin/products/pricing-badge.tsx` | Price display (flat / sale / variants) |
+| `apps/web/components/admin/products/pricing-badge.tsx` | Price display via `ProductPrice` (`pricing.display` + offer strikethrough) |
 
 ### Frontend — Pages & Page Components
 | Route | RSC file | Client file(s) |
@@ -110,9 +110,10 @@ DELETE /restaurants/:rId/products/:pId    → { message }                 (RESTA
 ```typescript
 ProductProfile.pricing {
   hasVariants: boolean
-  basePrice: string | null   // null when hasVariants = true
-  salePrice: string | null   // null when hasVariants = true or no sale
-  variants: ProductVariantProfile[]  // all variants (active + inactive) for detail view
+  regularPrice: string | null   // null when any variant row exists
+  offerPrice: string | null
+  display: { regularPrice: string | null; offerPrice: string | null }  // menu / card row
+  variants: ProductVariantProfile[]  // includes isDefault; all rows for admin detail
 }
 ```
 
@@ -122,8 +123,9 @@ ProductProfile.pricing {
 
 - `GET /restaurants/:id/products/manage` MUST be registered before `PATCH :productId` in the NestJS controller (route order matters — already done).
 - `/admin/products` page for `RESTAURANT_ADMIN` renders `<RestaurantProductsClient />` directly (no RSC data fetch, as selected restaurant is localStorage/context-based).
-- Product detail price fields are **disabled** when `product.pricing.hasVariants === true`. Show a note explaining variant pricing is active.
-- `salePrice` validation is enforced both client-side (zod `.refine()`) and server-side.
+- Product detail **regular/offer** fields are **disabled** when `product.pricing.variants.length > 0` (any variant row). Show a note explaining per-variant pricing.
+- **Default variant**: admin can set which active variant drives `pricing.display` (menu card price).
+- `offerPrice` validation is enforced both client-side (zod `.refine()`) and server-side.
 - Image URL is a plain text input (no upload API). Image preview renders with `onError` fallback hiding the broken img.
 - All `<img>` tags in admin components use `// eslint-disable-next-line @next/next/no-img-element` (these are internal admin pages).
 - Subcategory list page fetches subcategory details lazily (via `categoryService.getCategory(id)`) when a category is selected — the list endpoint only returns `_count`.
@@ -136,5 +138,3 @@ ProductProfile.pricing {
 - **Error display**: `form.setError("root", { message })` shown as `<p className="text-body text-destructive" role="alert">`
 - **Loading states**: `busyId: string | null` pattern on buttons
 - **Dialog forms**: `zodResolver`, `useForm` with `defaultValues`, `DialogContent` with `max-h-[90vh] overflow-y-auto sm:max-w-lg`
-</parameters>
-</invoke>

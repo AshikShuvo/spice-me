@@ -25,7 +25,6 @@
     "restaurant_not_found": "Restaurant ikke funnet.",
     "no_products_category": "Ingen retter i denne kategorien.",
     "back_menu": "Se full meny",
-    "no_price": "Ingen pris",
-    "variant_count": "{count, plural, one {# variant} other {# varianter}}"
+    "no_price": "Ingen pris"
   }
 }

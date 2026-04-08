@@ -70,16 +70,16 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 | `GET` | `/products` | public | Paginated **published + active** only; same query |
 | `POST` | `/products` | ADMIN | Create; `subCategoryId` must belong to `categoryId` |
 | `GET` | `/products/:id` | optional JWT | **ADMIN** with Bearer: any product; else **published + active** only |
-| `PATCH` | `/products/:id/publish` | ADMIN | `{ isPublished }`; cannot publish inactive product; requires `basePrice` **or** ≥1 active variant |
-| `PATCH` | `/products/:id` | ADMIN | Partial update |
+| `PATCH` | `/products/:id/publish` | ADMIN | `{ isPublished }`; cannot publish inactive product; **no variants:** requires `regularPrice`; **with active variants:** each active variant needs `regularPrice`, and **exactly one** active variant must be `isDefault` |
+| `PATCH` | `/products/:id` | ADMIN | Partial update; **400** if setting `regularPrice`/`offerPrice` while any variant row exists |
 | `DELETE` | `/products/:id` | ADMIN | Soft delete: `isActive: false`, `isPublished: false` |
-| `POST` | `/products/:id/variants` | ADMIN | Add variant; clears `product.basePrice` / `salePrice` |
-| `PATCH` | `/products/:id/variants/:variantId` | ADMIN | Update variant (incl. `isActive`) |
-| `DELETE` | `/products/:id/variants/:variantId` | ADMIN | **400** if last active variant and no `basePrice` |
+| `POST` | `/products/:id/variants` | ADMIN | Add variant; clears `product.regularPrice` / `offerPrice`; first variant becomes default |
+| `PATCH` | `/products/:id/variants/:variantId` | ADMIN | Update variant (incl. `isActive`, optional `isDefault`) |
+| `DELETE` | `/products/:id/variants/:variantId` | ADMIN | **400** if last active variant and no `regularPrice` on product |
 | `POST` | `/products/:id/allergy-items` | ADMIN | `{ allergyItemIds: string[] }` (`skipDuplicates`) |
 | `DELETE` | `/products/:id/allergy-items/:allergyItemId` | ADMIN | Remove link |
 
-**Response shape (`ProductProfile`):** includes `pricing: { hasVariants, basePrice, salePrice, variants[] }`. If any **active** variant exists, `hasVariants` is true and product-level `basePrice`/`salePrice` in the envelope are `null` (variant prices used). Otherwise product-level decimals apply. Money values are **strings** (decimal serialization).
+**Response shape (`ProductProfile`):** includes `pricing: { hasVariants, regularPrice, offerPrice, display: { regularPrice, offerPrice }, variants[] }`. If any **variant row** exists, product-level `regularPrice`/`offerPrice` in the envelope are `null`; `hasVariants` is true when there is at least one **active** variant. Each variant has `regularPrice`, optional `offerPrice`, `isActive`, `isDefault`. **`display`** is the menu-facing row: product-level prices when no active variants, otherwise the **default active variant’s** prices (fallback: first active). Money values are **strings** (decimal serialization).
 
 ### Menu (public browse)
 
@@ -100,7 +100,7 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 
 See `apps/api/prisma/schema.prisma` for full definitions. Highlights:
 
-- `Product` optional `basePrice` / `salePrice`; variant-level prices on `ProductVariant`.
+- `Product` optional `regularPrice` / `offerPrice`; `ProductVariant` has required `regularPrice`, optional `offerPrice`, and `isDefault` (exactly one default among active variants, enforced in service).
 - `RestaurantProduct` unique `(restaurantId, productId)`.
 - `Ingredient` / `ProductIngredient`: schema only for future add/exclude flows (no API yet).
 
@@ -124,12 +124,13 @@ No new variables; uses existing `DATABASE_URL` and JWT secrets.
 ## Key Decisions & Gotchas
 
 - **Optional JWT** on `GET /products/:id`: `OptionalJwtAuthGuard` allows anonymous access; valid ADMIN Bearer sees unpublished products.
-- **Adding a variant** nulls product `basePrice`/`salePrice` so pricing stays variant-driven until admin sets base price again after removing variants.
+- **Adding a variant** nulls product `regularPrice`/`offerPrice` so pricing stays variant-driven until admin sets product regular price again after removing the last variant.
 - **P2002** helpers extracted to `src/common/prisma-error.util.ts`; no `instanceof PrismaClientKnownRequestError` (breaks under ESM/Jest).
-- **salePrice validation**: `assertPricing()` in `ProductsService` throws `BadRequestException` if `salePrice >= basePrice`, checked in `create`, `update`, `addVariant`, `updateVariant`.
+- **Offer price validation**: `assertOfferPricing()` throws `BadRequestException` if `offerPrice >= regularPrice`, checked in `create`, `update`, `addVariant`, `updateVariant`.
+- **Default variant**: `reconcileVariantDefaults()` runs after variant mutations and before publish; ensures exactly one active default (or clears defaults when no active variants).
 - **addAllergyItems deduplication**: input `allergyItemIds` is deduplicated via `Set` before the DB length check, preventing false-positive "invalid IDs" errors for duplicate client values.
 - **publish single round-trip**: `publish()` fetches product + active variants in one query (no separate `canPublish` helper call).
-- **removeVariant parallelism**: product (`select: basePrice`) and variant count queries run via `Promise.all`, saving one sequential round-trip.
+- **removeVariant parallelism**: product (`select: regularPrice`) and variant count queries run via `Promise.all`, saving one sequential round-trip.
 - **ESM:** relative imports use `.js` extensions in TypeScript sources.
 - **Ingredient API** intentionally omitted; models exist for future order-time customization.
 
