@@ -56,7 +56,9 @@ export function ProductPrice({ pricing, className, labels }: Props) {
     return (
       <span className={cn("text-body text-coal", className)}>
         £{offer}{" "}
-        <span className="line-through text-neutral-30">£{reg}</span>
+        <span className="font-normal text-neutral-30 line-through decoration-primary decoration-2">
+          £{reg}
+        </span>
       </span>
     );
   }

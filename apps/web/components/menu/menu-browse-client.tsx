@@ -14,6 +14,9 @@ type Props = {
 
 type SubFilter = "all" | string;
 
+const menuTabBase =
+  "shrink-0 cursor-pointer border-b-[3px] bg-transparent px-3 py-2.5 font-ringside-compressed text-lg font-bold leading-tight tracking-tight transition-colors md:text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2";
+
 function buildSections(
   products: ProductProfile[],
   subCategories: MenuCategoryItem["subCategories"],
@@ -134,17 +137,17 @@ export function MenuBrowseClient({ menu }: Props) {
 
       <div className="flex flex-col gap-2">
         <div className="-mx-1 overflow-x-auto pb-0.5">
-          <div className="flex w-max min-w-full justify-center gap-2">
+          <div className="flex w-max min-w-full justify-center gap-1 sm:gap-4">
             {categories.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => onSelectCategory(c.id)}
                 className={cn(
-                  "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+                  menuTabBase,
                   selectedCategoryId === c.id
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:border-primary/50",
+                    ? "border-primary text-coal"
+                    : "border-transparent text-neutral-30 hover:text-coal",
                 )}
               >
                 {c.name}
