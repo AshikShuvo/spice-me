@@ -2,7 +2,7 @@
 
 ## Summary
 
-Customer-facing **Menu** route: category row, subcategory row (including **All**), responsive product grid with section headers when **All** is selected. Data comes from public `GET /menu` (optional `restaurantCode` query on the API). The page uses **ISR** (`revalidate = 60`) and **static params** so HTML is pre-rendered; all categories ship in one payload (client-side filtering).
+Customer-facing **Menu** route: category row, subcategory row (including **All**), responsive product grid with section headers when **All** is selected. Tapping a product opens a **details modal** (image, description, optional multi-variant chips, quantity stepper, **Add to cart** showing line total). Cart is not wired yet — the CTA only `console.log`s. Data comes from public `GET /menu` (optional `restaurantCode` query on the API). The page uses **ISR** (`revalidate = 60`) and **static params** so HTML is pre-rendered; all categories ship in one payload (client-side filtering).
 
 ## Status
 
@@ -22,9 +22,10 @@ Customer-facing **Menu** route: category row, subcategory row (including **All**
 |------|------|
 | `apps/web/lib/types/menu-api.ts` | `MenuResponse` types (mirrors API) |
 | `apps/web/lib/fetch-menu.ts` | Server-side `fetchMenu` using `NEXT_PUBLIC_API_URL` (`next.revalidate: 60`) |
-| `apps/web/components/menu/menu-browse-client.tsx` | Category/subcategory state, sectioning, grid |
-| `apps/web/components/menu/menu-product-card.tsx` | Card layout (image, title, description, price) |
-| `apps/web/components/menu/product-price.tsx` | Shared price / variants display (also used by admin `PricingBadge`) |
+| `apps/web/components/menu/menu-browse-client.tsx` | Category/subcategory state, sectioning, grid, product details modal state |
+| `apps/web/components/menu/menu-product-card.tsx` | Clickable card (image, title, description, price) |
+| `apps/web/components/menu/product-details-modal.tsx` | Radix dialog: responsive product sheet, variants, qty, stub add-to-cart |
+| `apps/web/components/menu/product-price.tsx` | Shared price / variants display + exported pricing helpers (`resolveDisplayRow`, `getActiveVariants`, etc.); also used by admin `PricingBadge` |
 | `apps/web/messages/en.json` / `no.json` | `menu.*` strings |
 
 ## Routes
@@ -47,6 +48,7 @@ menu/[[...slug]]/page.tsx (RSC, ISR revalidate 60)
   → fetchMenu(restaurantCode from slug segment r/{code})
   → MenuBrowseClient(initialMenu)
   → filter/group products by selected category & subcategory
+  → optional ProductDetailsModal when user selects a product
 ```
 
 ## Static generation
@@ -70,3 +72,4 @@ menu/[[...slug]]/page.tsx (RSC, ISR revalidate 60)
 - Product images use a native `<img>` (not `next/image`) with `suppressHydrationWarning` so extensions that rewrite image markup (e.g. extra classes / `filter`) do not cause hydration mismatches; first-row cards use `loading="eager"` and `fetchPriority="high"` for LCP.
 - Inactive categories are excluded server-side; their products do not appear in the payload.
 - Do not read `searchParams` on the menu page — that opts the route out of static ISR; use path `/menu/r/{code}` or the proxy redirect instead.
+- Modal close defers clearing `detailsProduct` briefly so Radix can finish the close animation without unmounting content early.

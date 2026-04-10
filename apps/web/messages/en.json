@@ -25,6 +25,10 @@
     "restaurant_not_found": "Restaurant not found.",
     "no_products_category": "No dishes in this category.",
     "back_menu": "View full menu",
-    "no_price": "No price"
+    "no_price": "No price",
+    "add_to_cart": "Add to cart",
+    "quantity_decrease": "Decrease quantity",
+    "quantity_increase": "Increase quantity",
+    "choose_variant": "Choose option"
   }
 }

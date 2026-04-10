@@ -25,6 +25,10 @@
     "restaurant_not_found": "Restaurant ikke funnet.",
     "no_products_category": "Ingen retter i denne kategorien.",
     "back_menu": "Se full meny",
-    "no_price": "Ingen pris"
+    "no_price": "Ingen pris",
+    "add_to_cart": "Legg i handlekurv",
+    "quantity_decrease": "Reduser antall",
+    "quantity_increase": "Øk antall",
+    "choose_variant": "Velg variant"
   }
 }

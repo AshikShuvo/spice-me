@@ -1,4 +1,7 @@
-import type { ProductProfile } from "@/lib/types/admin-api";
+import type {
+  ProductProfile,
+  ProductVariantProfile,
+} from "@/lib/types/admin-api";
 import { cn } from "@/lib/utils";
 
 export type ProductPriceLabels = {
@@ -16,7 +19,7 @@ type Props = {
 };
 
 /** Matches API `toProfile` when `pricing.display` is missing (stale cache / older server). */
-function resolveDisplayRow(pricing: ProductProfile["pricing"]): {
+export function resolveDisplayRow(pricing: ProductProfile["pricing"]): {
   regularPrice: string | null;
   offerPrice: string | null;
 } {
@@ -27,7 +30,7 @@ function resolveDisplayRow(pricing: ProductProfile["pricing"]): {
       offerPrice: d.offerPrice,
     };
   }
-  const active = (pricing.variants ?? []).filter((v) => v.isActive);
+  const active = getActiveVariants(pricing);
   if (active.length > 0) {
     const def = active.find((v) => v.isDefault) ?? active[0]!;
     return {
@@ -39,6 +42,38 @@ function resolveDisplayRow(pricing: ProductProfile["pricing"]): {
     regularPrice: pricing.regularPrice,
     offerPrice: pricing.offerPrice,
   };
+}
+
+export function getActiveVariants(
+  pricing: ProductProfile["pricing"],
+): ProductVariantProfile[] {
+  return (pricing.variants ?? []).filter((v) => v.isActive);
+}
+
+export function getDefaultActiveVariant(
+  pricing: ProductProfile["pricing"],
+): ProductVariantProfile | null {
+  const active = getActiveVariants(pricing);
+  if (active.length === 0) return null;
+  return active.find((v) => v.isDefault) ?? active[0]!;
+}
+
+/** Effective selling unit price for a variant row (offer if set). */
+export function unitPriceFromVariant(v: ProductVariantProfile): number | null {
+  const s = v.offerPrice ?? v.regularPrice;
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Effective selling unit price from a resolved display row. */
+export function unitPriceFromDisplayRow(row: {
+  regularPrice: string | null;
+  offerPrice: string | null;
+}): number | null {
+  const s = row.offerPrice ?? row.regularPrice;
+  if (s == null || s === "") return null;
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
 }
 
 export function ProductPrice({ pricing, className, labels }: Props) {

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 
 import { MenuProductCard } from "@/components/menu/menu-product-card";
+import { ProductDetailsModal } from "@/components/menu/product-details-modal";
 import type { MenuCategoryItem, MenuResponse } from "@/lib/types/menu-api";
 import type { ProductProfile } from "@/lib/types/admin-api";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,9 @@ export function MenuBrowseClient({ menu }: Props) {
     string | null
   >(() => categories[0]?.id ?? null);
   const [selectedSub, setSelectedSub] = React.useState<SubFilter>("all");
+  const [detailsProduct, setDetailsProduct] =
+    React.useState<ProductProfile | null>(null);
+  const [detailsOpen, setDetailsOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (
@@ -116,6 +120,11 @@ export function MenuBrowseClient({ menu }: Props) {
   function onSelectCategory(id: string) {
     setSelectedCategoryId(id);
     setSelectedSub("all");
+  }
+
+  function openProductDetails(p: ProductProfile) {
+    setDetailsProduct(p);
+    setDetailsOpen(true);
   }
 
   if (categories.length === 0) {
@@ -210,6 +219,7 @@ export function MenuBrowseClient({ menu }: Props) {
                     key={p.id}
                     product={p}
                     priority={lcpPriorityIds.has(p.id)}
+                    onSelect={() => openProductDetails(p)}
                   />
                 ))}
               </div>
@@ -217,6 +227,18 @@ export function MenuBrowseClient({ menu }: Props) {
           ),
         )}
       </div>
+
+      <ProductDetailsModal
+        key={detailsProduct?.id ?? "menu-details"}
+        product={detailsProduct}
+        open={detailsOpen}
+        onOpenChange={(next) => {
+          setDetailsOpen(next);
+          if (!next) {
+            window.setTimeout(() => setDetailsProduct(null), 250);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -9,14 +9,20 @@ type Props = {
   product: ProductProfile;
   /** First visible grid images: eager load for LCP (2-col mobile often shows two above the fold). */
   priority?: boolean;
+  onSelect?: () => void;
 };
 
-export function MenuProductCard({ product, priority = false }: Props) {
+export function MenuProductCard({ product, priority = false, onSelect }: Props) {
   const t = useTranslations("menu");
 
   return (
-    <article className="flex min-w-0 flex-col gap-1 md:gap-1.5">
-      <div className="group relative aspect-square w-full overflow-hidden rounded-md md:rounded-lg">
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={!onSelect}
+      className="group flex min-w-0 w-full cursor-pointer flex-col gap-1 rounded-md text-left transition-[box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 disabled:cursor-default md:gap-1.5"
+    >
+      <div className="relative aspect-square w-full overflow-hidden rounded-md md:rounded-lg">
         {/*
           Native img + suppressHydrationWarning: some browser extensions mutate <img> (e.g. extra classes,
           data attrs, filter) before React hydrates, which would mismatch next/image’s output.
@@ -49,6 +55,6 @@ export function MenuProductCard({ product, priority = false }: Props) {
           />
         </div>
       </div>
-    </article>
+    </button>
   );
 }
