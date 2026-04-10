@@ -1,12 +1,9 @@
 {
   "home": {
-    "get_started": "Kom i gang ved å redigere",
-    "edit_file_hint": "apps/web/app/[locale]/page.tsx",
-    "save_instant": "Lagre og se endringene dine med en gang.",
-    "deploy": "Distribuer nå",
-    "docs": "Les dokumentasjonen vår",
-    "open_alert": "Åpne varsel",
-    "hello_world": "hei verden"
+    "hero_kicker": "spice-me",
+    "hero_title": "Pizza og mer",
+    "hero_tagline": "Se menyen, oppdag dagens tilbud og bestill på nett — raskt.",
+    "cta_menu": "Se menyen"
   },
   "footer": {
     "examples": "Eksempler",

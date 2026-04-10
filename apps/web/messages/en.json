@@ -1,12 +1,9 @@
 {
   "home": {
-    "get_started": "Get started by editing",
-    "edit_file_hint": "apps/web/app/[locale]/page.tsx",
-    "save_instant": "Save and see your changes instantly.",
-    "deploy": "Deploy now",
-    "docs": "Read our docs",
-    "open_alert": "Open alert",
-    "hello_world": "hello world"
+    "hero_kicker": "spice-me",
+    "hero_title": "Pizza & more",
+    "hero_tagline": "Browse the menu, discover daily specials, and order online — fast.",
+    "cta_menu": "View menu"
   },
   "footer": {
     "examples": "Examples",

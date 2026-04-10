@@ -11,7 +11,7 @@ export default function AppLayout({
   return (
     <div className="flex min-h-screen flex-col w-full justify-around align-middle">
       <Header />
-      <main className="w-full flex flex-1 flex-col py-8 mx-auto items-center justify-between">
+      <main className="mx-auto flex w-full min-h-0 flex-1 flex-col items-center justify-between py-8">
           {children}
       </main>
       <footer className="w-full flex flex-col py-8 mx-auto items-center justify-between">
