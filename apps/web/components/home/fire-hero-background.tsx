@@ -20,11 +20,27 @@ export function FireHeroBackground() {
   }, []);
 
   return (
-    <div aria-hidden className="absolute inset-0 overflow-hidden bg-[#0a0505]">
+    <div
+      aria-hidden
+      className="absolute inset-0 overflow-hidden bg-background"
+    >
       <AnimatedGradient
         config={{
-          preset: "Lava",
+          preset: "custom",
+          color1: "#FF9F21",
+          color2: "#cd1719",
+          color3: "#fffdf9",
+          rotation: 114,
+          proportion: 100,
+          scale: 0.52,
           speed: reduceMotion ? 0 : 28,
+          distortion: 7,
+          swirl: 18,
+          swirlIterations: 20,
+          softness: 100,
+          offset: 717,
+          shape: "Edge",
+          shapeSize: 12,
         }}
         className="h-full w-full"
         style={{ zIndex: 0 }}

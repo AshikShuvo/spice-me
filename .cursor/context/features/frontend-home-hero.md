@@ -2,7 +2,7 @@
 
 ## Summary
 
-The public **home** route (`/{locale}` under the `(app)` layout) is a single full-viewport **hero** (below the sticky header): WebGL lava gradient, dark scrim, headline copy, and a primary CTA to **`/menu`**. Motion respects **`prefers-reduced-motion`**.
+The public **home** route (`/{locale}` under the `(app)` layout) is a single full-viewport **hero** (below the sticky header): WebGL lava gradient (no dark overlay), headline copy in **coal / neutral** for contrast on the light-tinted shader, and a primary CTA to **`/menu`**. Motion respects **`prefers-reduced-motion`**.
 
 ## Status
 
@@ -22,8 +22,8 @@ The public **home** route (`/{locale}` under the `(app)` layout) is a single ful
 | File | Role |
 |------|------|
 | `apps/web/app/[locale]/(app)/page.tsx` | RSC: `HomeHero` only |
-| `apps/web/components/home/home-hero.tsx` | Full-bleed section, scrim, copy, menu `Button` + `Link` |
-| `apps/web/components/home/fire-hero-background.tsx` | `AnimatedGradient` preset **Lava**, `prefers-reduced-motion` → frozen shader |
+| `apps/web/components/home/home-hero.tsx` | Full-bleed section, copy, menu `Button` + `Link` |
+| `apps/web/components/home/fire-hero-background.tsx` | `AnimatedGradient` custom preset (Lava-like + `color3` **#fffdf9** = `--color-light-bg`), wrapper **`bg-background`** |
 | `apps/web/components/animated-gradient.tsx` | WebGL2 shader (Spell UI registry via `shadcn add @spell/animated-gradient`) |
 | `apps/web/messages/en.json` / `no.json` | `home.hero_*`, `home.cta_menu` |
 
@@ -53,7 +53,7 @@ None.
 - **Full bleed:** Hero uses `w-screen max-w-[100vw] left-1/2 -translate-x-1/2` to escape `main` horizontal centering.
 - **Performance:** WebGL canvas; requires WebGL2 — falls back to empty if context creation fails (see component).
 - **Reduced motion:** `FireHeroBackground` sets gradient `speed: 0` when `prefers-reduced-motion: reduce`.
-- **Spell “Lava” preset:** Amber / red / black swirl tuned for flame-like motion; swap to `preset: "custom"` with brand hex values if needed.
+- **Shader colors:** Lava-style motion with third blend color **`#fffdf9`** (same as `--color-light-bg`) and **`color2` Peppes red**; container uses **`bg-background`** so gaps match the body.
 
 ## TODOs / Open Questions
 

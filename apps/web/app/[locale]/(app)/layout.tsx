@@ -16,7 +16,7 @@ export default function AppLayout({
       </main>
       <footer className="w-full flex flex-col py-8 mx-auto items-center justify-between">
         <p className="text-caption text-coal-60">
-          Route: <code className="bg-lyserosa px-1.5 py-0.5 rounded">/menu</code>   
+         <code className="bg-lyserosa px-1.5 py-0.5 rounded">Powered by SpiceMe</code>   
         </p>
       </footer>
       {modal}
