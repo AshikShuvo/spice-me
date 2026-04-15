@@ -145,6 +145,17 @@ export class RestaurantsService {
     return this.toProfile(r);
   }
 
+  /** Minimal fields for public location picker (navbar). */
+  async findActiveForBrowse(): Promise<
+    Array<{ id: string; name: string; code: string }>
+  > {
+    return this.prisma.restaurant.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, code: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async findMyRestaurants(userId: string): Promise<RestaurantProfile[]> {
     const assignments = await this.prisma.restaurantAdminAssignment.findMany({
       where: { userId },

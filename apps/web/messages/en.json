@@ -13,6 +13,28 @@
     "loading": "Loading...",
     "error": "Something went wrong"
   },
+  "header": {
+    "location_aria": "Restaurant location",
+    "location_placeholder": "Location",
+    "all_locations": "All locations"
+  },
+  "reserve": {
+    "select_location_hint": "Choose a location from the dropdown in the header to book a table at that restaurant.",
+    "loading_location": "Loading this location…",
+    "menu_load_failed": "We could not load the menu for that location. Try again or pick another location.",
+    "menu_location_invalid": "That location is not available for booking.",
+    "booking_date": "Date",
+    "booking_time": "Time",
+    "start_time": "Starts",
+    "end_time": "Ends",
+    "pick_table_for_calendar": "Select a table to load the calendar and booked slots.",
+    "occupied_load_failed": "Could not load existing bookings for this table.",
+    "end_after_start": "End time must be after start time.",
+    "slot_not_available": "This time overlaps an existing booking. Pick another slot.",
+    "slot_available": "This time is available.",
+    "booked_windows_title": "Already booked on this table",
+    "booked_windows_truncated": "Showing the first eight; more exist in the loaded range."
+  },
   "menu": {
     "title": "Menu",
     "all": "All",

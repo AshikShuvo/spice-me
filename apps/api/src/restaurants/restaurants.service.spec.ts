@@ -374,6 +374,21 @@ describe('RestaurantsService', () => {
     });
   });
 
+  describe('findActiveForBrowse', () => {
+    it('returns id, name, code for active restaurants ordered by name', async () => {
+      prisma.restaurant.findMany.mockResolvedValue([
+        { id: 'a', name: 'Alpha', code: 'RQ0001' },
+      ]);
+      const out = await service.findActiveForBrowse();
+      expect(out).toEqual([{ id: 'a', name: 'Alpha', code: 'RQ0001' }]);
+      expect(prisma.restaurant.findMany).toHaveBeenCalledWith({
+        where: { isActive: true },
+        select: { id: true, name: true, code: true },
+        orderBy: { name: 'asc' },
+      });
+    });
+  });
+
   describe('listAdmins', () => {
     it('returns users without password or refreshToken', async () => {
       prisma.restaurant.findUnique.mockResolvedValue(baseRestaurant);

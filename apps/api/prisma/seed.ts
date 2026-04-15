@@ -4,6 +4,13 @@ import * as bcrypt from 'bcrypt';
 import { PrismaClient } from '../generated/prisma/client.js';
 import { Role } from '../generated/prisma/enums.js';
 
+const DEFAULT_ADMIN_EMAIL = 'admin@spiceme.com';
+
+/** Plaintext password set on every seed run (override with DEFAULT_ADMIN_PASSWORD). */
+function defaultAdminPassword(): string {
+  return process.env.DEFAULT_ADMIN_PASSWORD ?? 'Admin@123';
+}
+
 async function main(): Promise<void> {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
@@ -12,27 +19,32 @@ async function main(): Promise<void> {
   const adapter = new PrismaPg(connectionString);
   const prisma = new PrismaClient({ adapter });
 
-  const email = 'admin@spiceme.com';
-  const password = 'Admin@123';
-
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    console.log(`Seed skipped: admin ${email} already exists`);
-    await prisma.$disconnect();
-    return;
-  }
-
+  const email = DEFAULT_ADMIN_EMAIL;
+  const password = defaultAdminPassword();
   const passwordHash = await bcrypt.hash(password, 10);
-  await prisma.user.create({
-    data: {
+
+  const existed = await prisma.user.findUnique({ where: { email } });
+
+  await prisma.user.upsert({
+    where: { email },
+    create: {
       email,
       name: 'Default Admin',
       password: passwordHash,
       role: Role.ADMIN,
     },
+    update: {
+      password: passwordHash,
+      role: Role.ADMIN,
+      isActive: true,
+    },
   });
 
-  console.log(`Seeded default admin: ${email} / ${password}`);
+  console.log(
+    existed
+      ? `Reset default admin password: ${email} / ${password}`
+      : `Seeded default admin: ${email} / ${password}`,
+  );
   await prisma.$disconnect();
 }
 

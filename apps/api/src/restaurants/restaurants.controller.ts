@@ -46,6 +46,14 @@ export class RestaurantsController {
     return this.restaurantsService.findDefault();
   }
 
+  @Get('browse')
+  @ApiOperation({
+    summary: 'List active restaurants for public browsing (id, name, code)',
+  })
+  browse(): Promise<Array<{ id: string; name: string; code: string }>> {
+    return this.restaurantsService.findActiveForBrowse();
+  }
+
   @Get('my')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.RESTAURANT_ADMIN)

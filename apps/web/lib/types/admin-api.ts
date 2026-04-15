@@ -124,3 +124,39 @@ export interface RestaurantProductManageRow {
   updatedAt: string;
   product: ProductProfile;
 }
+
+// ─── Restaurant tables & reservations ───────────────────────────────────────
+
+export type TableReservationStatusApi =
+  | "PENDING"
+  | "CONFIRMED"
+  | "CANCELLED"
+  | "COMPLETED";
+
+export interface RestaurantTableProfile {
+  id: string;
+  restaurantId: string;
+  tableNumber: string;
+  seatCount: number;
+  isActive: boolean;
+  locationLabel: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TableReservationProfile {
+  id: string;
+  restaurantId: string;
+  tableId: string;
+  userId: string;
+  startsAt: string;
+  endsAt: string;
+  partySize: number;
+  status: TableReservationStatusApi;
+  createdAt: string;
+  updatedAt: string;
+  table: { id: string; tableNumber: string; seatCount: number };
+  restaurant: { id: string; name: string };
+  user?: { id: string; email: string; name: string };
+}

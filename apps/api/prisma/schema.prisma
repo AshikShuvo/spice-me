@@ -15,6 +15,13 @@ enum Role {
   RESTAURANT_ADMIN
 }
 
+enum TableReservationStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  PENDING
+}
+
 model User {
   id                   String    @id @default(cuid())
   email                String    @unique
@@ -29,6 +36,7 @@ model User {
   updatedAt            DateTime  @updatedAt
 
   restaurantAssignments RestaurantAdminAssignment[]
+  tableReservations     TableReservation[]
 }
 
 model Restaurant {
@@ -48,6 +56,47 @@ model Restaurant {
 
   adminAssignments   RestaurantAdminAssignment[]
   restaurantProducts RestaurantProduct[]
+  tables             RestaurantTable[]
+  tableReservations  TableReservation[]
+}
+
+model RestaurantTable {
+  id             String   @id @default(cuid())
+  restaurantId   String
+  tableNumber    String
+  seatCount      Int
+  isActive       Boolean  @default(true)
+  locationLabel  String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  restaurant   Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  reservations TableReservation[]
+
+  @@unique([restaurantId, tableNumber])
+  @@index([restaurantId])
+}
+
+model TableReservation {
+  id            String                 @id @default(cuid())
+  restaurantId  String
+  tableId       String
+  userId        String
+  startsAt      DateTime               @db.Timestamptz
+  endsAt        DateTime               @db.Timestamptz
+  partySize     Int
+  status        TableReservationStatus @default(PENDING)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table      RestaurantTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tableId, startsAt])
+  @@index([restaurantId, startsAt])
+  @@index([userId, startsAt])
 }
 
 model RestaurantAdminAssignment {

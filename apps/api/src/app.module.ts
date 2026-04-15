@@ -9,6 +9,7 @@ import { MenuModule } from './menu/menu.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ProductsModule } from './products/products.module.js';
 import { RestaurantProductsModule } from './restaurant-products/restaurant-products.module.js';
+import { RestaurantTablesModule } from './restaurant-tables/restaurant-tables.module.js';
 import { RestaurantsModule } from './restaurants/restaurants.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module.js';
     AllergyItemsModule,
     ProductsModule,
     RestaurantProductsModule,
+    RestaurantTablesModule,
     MenuModule,
   ],
   controllers: [AppController],

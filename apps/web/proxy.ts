@@ -54,6 +54,18 @@ export async function proxy(request: NextRequest) {
         );
       }
     }
+    if (token.role === "ADMIN") {
+      const restaurantAdminOnlyPrefixes = ["/admin/tables"] as const;
+      if (
+        restaurantAdminOnlyPrefixes.some((prefix) =>
+          pathWithoutLocale.startsWith(prefix),
+        )
+      ) {
+        return NextResponse.redirect(
+          new URL(`/${locale}/admin/dashboard`, request.url),
+        );
+      }
+    }
   }
 
   return intlMiddleware(request);

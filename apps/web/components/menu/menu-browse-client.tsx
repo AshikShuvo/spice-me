@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 
 import { MenuProductCard } from "@/components/menu/menu-product-card";
 import { ProductDetailsModal } from "@/components/menu/product-details-modal";
+import { usePublicRestaurant } from "@/components/public-restaurant/public-restaurant-context";
+import { fetchMenuPublicClient } from "@/lib/fetch-menu-public-client";
 import type { MenuCategoryItem, MenuResponse } from "@/lib/types/menu-api";
 import type { ProductProfile } from "@/lib/types/admin-api";
 import { cn } from "@/lib/utils";
@@ -62,7 +64,45 @@ function buildSections(
 
 export function MenuBrowseClient({ menu }: Props) {
   const t = useTranslations("menu");
-  const { categories, products } = menu;
+  const ctx = usePublicRestaurant();
+  const [menuState, setMenuState] = React.useState(menu);
+  const menuStateRef = React.useRef(menuState);
+  menuStateRef.current = menuState;
+
+  React.useEffect(() => {
+    const want = ctx.restaurantCode ?? null;
+
+    const matches = (m: MenuResponse) =>
+      (want === null && m.scope === "global") ||
+      (want !== null &&
+        m.scope === "restaurant" &&
+        m.restaurant?.code === want);
+
+    if (matches(menu)) {
+      setMenuState(menu);
+      return;
+    }
+
+    if (matches(menuStateRef.current)) {
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const data = await fetchMenuPublicClient(want ?? undefined);
+        if (!cancelled) setMenuState(data);
+      } catch {
+        if (!cancelled) setMenuState(menu);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ctx.restaurantCode, menu]);
+
+  const { categories, products } = menuState;
 
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<
     string | null
@@ -135,15 +175,6 @@ export function MenuBrowseClient({ menu }: Props) {
 
   return (
     <div className="space-y-6">
-      {menu.restaurant ? (
-        <p className="text-center text-caption text-neutral-30">
-          {menu.restaurant.name}
-          <span className="ml-1 text-neutral-30/80">
-            ({menu.restaurant.code})
-          </span>
-        </p>
-      ) : null}
-
       <div className="flex flex-col gap-2">
         <div className="-mx-1 overflow-x-auto pb-0.5">
           <div className="flex w-max min-w-full justify-center gap-1 sm:gap-4">

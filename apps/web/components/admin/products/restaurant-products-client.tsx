@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 import { useSelectedRestaurant } from "@/components/admin/selected-restaurant-context";
@@ -15,6 +16,8 @@ import { useRestaurantProductService } from "@/lib/services/use-restaurant-produ
 import type { RestaurantProductManageRow } from "@/lib/types/admin-api";
 
 export function RestaurantProductsClient() {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
   const { selectedRestaurant } = useSelectedRestaurant();
   const restaurantProductService = useRestaurantProductService();
 
@@ -92,7 +95,9 @@ export function RestaurantProductsClient() {
           description="Manage products available in your restaurant."
         />
         <p className="text-body text-neutral-30">
-          Select a restaurant from the sidebar to manage its products.
+          {role === "ADMIN"
+            ? "No restaurant is available yet, or none could be selected automatically. Create a restaurant under Restaurants — the first one is used for linked products without a sidebar picker."
+            : "Select a restaurant from the sidebar to manage its products."}
         </p>
       </div>
     );

@@ -4,6 +4,8 @@
 
 Customer-facing **Menu** route: category row, subcategory row (including **All**), responsive product grid with section headers when **All** is selected. Tapping a product opens a **details modal** (image, description, optional multi-variant chips, quantity stepper, **Add to cart** showing line total). Cart is not wired yet — the CTA only `console.log`s. Data comes from public `GET /menu` (optional `restaurantCode` query on the API). The page uses **ISR** (`revalidate = 60`) and **static params** so HTML is pre-rendered; all categories ship in one payload (client-side filtering).
 
+**Public location context:** the shared app header includes a **location** `Select` backed by `GET /restaurants/browse`. The choice is stored in `localStorage` and synced from `/menu/r/{code}` URLs. Browsing `/menu` without a selection shows the **global** catalog; choosing a location refetches the menu client-side when the server-rendered payload does not already match. The **Reserve** page uses the same selection (via `fetchMenuPublicClient`) to resolve `restaurantId` for tables and booking.
+
 ## Status
 
 **complete**
@@ -26,7 +28,12 @@ Customer-facing **Menu** route: category row, subcategory row (including **All**
 | `apps/web/components/menu/menu-product-card.tsx` | Clickable card (image, title, description, price) |
 | `apps/web/components/menu/product-details-modal.tsx` | Radix dialog: responsive product sheet, variants, qty, stub add-to-cart |
 | `apps/web/components/menu/product-price.tsx` | Shared price / variants display + exported pricing helpers (`resolveDisplayRow`, `getActiveVariants`, etc.); also used by admin `PricingBadge` |
-| `apps/web/messages/en.json` / `no.json` | `menu.*` strings |
+| `apps/web/components/public-restaurant/public-restaurant-context.tsx` | Client provider: `restaurantCode`, `setRestaurantCode`, LS + `/menu/r/*` URL sync |
+| `apps/web/components/public-restaurant/public-restaurant-picker.tsx` | Header `Select`: all locations + `GET /restaurants/browse`; updates context and `/menu` routes when on menu |
+| `apps/web/lib/fetch-menu-public-client.ts` | Client `GET /menu` (`cache: no-store`) when context changes |
+| `apps/web/lib/fetch-restaurants-browse-client.ts` | Client `GET /restaurants/browse` |
+| `apps/web/lib/i18n-pathname.ts` | `stripLocalePrefix` (shared with nav + context) |
+| `apps/web/messages/en.json` / `no.json` | `menu.*`, `header.*`, `reserve.*` strings |
 
 ## Routes
 
@@ -39,6 +46,7 @@ Customer-facing **Menu** route: category row, subcategory row (including **All**
 ## API Contract
 
 - `GET /menu` — optional query `restaurantCode`
+- `GET /restaurants/browse` — public; active restaurants as `{ id, name, code }[]`
 - Response: `{ scope, restaurant, categories[], products[] }` — see backend feature doc
 
 ## Data Flow

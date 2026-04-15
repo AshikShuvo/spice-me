@@ -1,28 +1,17 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { routing } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import { stripLocalePrefix } from "@/lib/i18n-pathname";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/menu", label: "Menu" },
+  { href: "/reserve", label: "Reserve" },
   { href: "/design-guide", label: "Design guide" },
 ] as const;
-
-/** Next.js pathname is `/[locale]/...`; compare using path without locale. */
-function stripLocalePrefix(pathname: string): string {
-  const segments = pathname.split("/").filter(Boolean);
-  if (segments.length === 0) return "/";
-  const first = segments[0];
-  if (routing.locales.includes(first as (typeof routing.locales)[number])) {
-    if (segments.length === 1) return "/";
-    return `/${segments.slice(1).join("/")}`;
-  }
-  return pathname.startsWith("/") ? pathname : `/${pathname}`;
-}
 
 function pathMatchesNavHref(pathname: string, href: string): boolean {
   if (href === "/") {

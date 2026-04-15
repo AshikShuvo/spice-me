@@ -81,6 +81,7 @@ Base URL: `NEXT_PUBLIC_API_URL` (see [frontend-auth.md](frontend-auth.md)).
 - **RSC token refresh:** `server-api` does not refresh tokens; long-lived admin sessions may see 401 on server fetches — rely on client navigation or re-login if needed.
 - **User list cap:** Restaurant-admins page and assign dialog use `GET /users` with `limit=100`. More than 100 total users requires API pagination or a role filter endpoint later.
 - **UTC labels:** Opening/closing fields are labeled as UTC; values are `HH:MM` strings sent to the API as-is.
+- **Selected restaurant for `ADMIN`:** The admin layout loads up to 100 restaurants via `GET /restaurants` into `SelectedRestaurantProvider` only (no sidebar picker). The first restaurant (or `localStorage` if still valid) is used automatically so `useSelectedRestaurant()` works for products/tables without asking platform admins to choose a location.
 - **Assign dialog effect deps:** Excluded user IDs are stabilised in `RestaurantDetailClient` with `useMemo` to avoid refetch loops.
 
 ## Dependencies on other features

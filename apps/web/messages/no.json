@@ -13,6 +13,28 @@
     "loading": "Laster...",
     "error": "Noe gikk galt"
   },
+  "header": {
+    "location_aria": "Restaurantsted",
+    "location_placeholder": "Sted",
+    "all_locations": "Alle steder"
+  },
+  "reserve": {
+    "select_location_hint": "Velg et sted i menyen øverst for å reservere bord på den restauranten.",
+    "loading_location": "Laster dette stedet …",
+    "menu_load_failed": "Vi kunne ikke laste menyen for dette stedet. Prøv igjen eller velg et annet sted.",
+    "menu_location_invalid": "Dette stedet er ikke tilgjengelig for reservasjon.",
+    "booking_date": "Dato",
+    "booking_time": "Tid",
+    "start_time": "Starter",
+    "end_time": "Slutter",
+    "pick_table_for_calendar": "Velg et bord for å laste kalender og opptatte tider.",
+    "occupied_load_failed": "Kunne ikke laste eksisterende reservasjoner for dette bordet.",
+    "end_after_start": "Sluttid må være etter starttid.",
+    "slot_not_available": "Tiden overlapper en eksisterende booking. Velg et annet tidspunkt.",
+    "slot_available": "Denne tiden er ledig.",
+    "booked_windows_title": "Allerede booket på dette bordet",
+    "booked_windows_truncated": "Viser de åtte første; det finnes flere i det lastede intervallet."
+  },
   "menu": {
     "title": "Meny",
     "all": "Alle",

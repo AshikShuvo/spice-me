@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { useSelectedRestaurant } from "@/components/admin/selected-restaurant-context";
 
+/** Sidebar location picker for `RESTAURANT_ADMIN` only (see admin layout). */
 export function RestaurantAdminRestaurantSelect() {
   const { restaurants, selectedId, setSelectedId } = useSelectedRestaurant();
 

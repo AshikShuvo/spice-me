@@ -138,17 +138,16 @@ export class ProductsService {
     const activeDefaults = active.filter((v) => v.isDefault);
     let keepId: string;
     if (activeDefaults.length === 0) {
-      keepId = active[0]!.id;
+      keepId = active[0].id;
     } else if (activeDefaults.length === 1) {
-      keepId = activeDefaults[0]!.id;
+      keepId = activeDefaults[0].id;
     } else {
-      activeDefaults.sort(
-        (a, b) =>
-          a.sortOrder !== b.sortOrder
-            ? a.sortOrder - b.sortOrder
-            : a.id.localeCompare(b.id),
+      activeDefaults.sort((a, b) =>
+        a.sortOrder !== b.sortOrder
+          ? a.sortOrder - b.sortOrder
+          : a.id.localeCompare(b.id),
       );
-      keepId = activeDefaults[0]!.id;
+      keepId = activeDefaults[0].id;
     }
     await this.prisma.$transaction([
       this.prisma.productVariant.updateMany({
@@ -184,8 +183,7 @@ export class ProductsService {
 
     let display: ProductPriceDisplay;
     if (hasVariants) {
-      const def =
-        activeVariants.find((v) => v.isDefault) ?? activeVariants[0]!;
+      const def = activeVariants.find((v) => v.isDefault) ?? activeVariants[0];
       display = {
         regularPrice: def.regularPrice.toString(),
         offerPrice: decToString(def.offerPrice),
@@ -384,7 +382,9 @@ export class ProductsService {
         ...(dto.subCategoryId !== undefined && {
           subCategoryId: dto.subCategoryId,
         }),
-        ...(dto.regularPrice !== undefined && { regularPrice: dto.regularPrice }),
+        ...(dto.regularPrice !== undefined && {
+          regularPrice: dto.regularPrice,
+        }),
         ...(dto.offerPrice !== undefined && { offerPrice: dto.offerPrice }),
       },
       include: PRODUCT_INCLUDE,
