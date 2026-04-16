@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { MenuProductCard } from "@/components/menu/menu-product-card";
 import { ProductDetailsModal } from "@/components/menu/product-details-modal";
 import { usePublicRestaurant } from "@/components/public-restaurant/public-restaurant-context";
 import { fetchMenuPublicClient } from "@/lib/fetch-menu-public-client";
+import { formatCurrencyAmount } from "@/lib/money/format-currency";
 import type { MenuCategoryItem, MenuResponse } from "@/lib/types/menu-api";
 import type { ProductProfile } from "@/lib/types/admin-api";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,7 @@ function buildSections(
 
 export function MenuBrowseClient({ menu }: Props) {
   const t = useTranslations("menu");
+  const locale = useLocale();
   const ctx = usePublicRestaurant();
   const [menuState, setMenuState] = React.useState(menu);
   const menuStateRef = React.useRef(menuState);
@@ -103,6 +105,12 @@ export function MenuBrowseClient({ menu }: Props) {
   }, [ctx.restaurantCode, menu]);
 
   const { categories, products } = menuState;
+
+  const formatMenuAmount = React.useCallback(
+    (amount: string | number) =>
+      formatCurrencyAmount(amount, menuState.currencyCode, locale),
+    [menuState.currencyCode, locale],
+  );
 
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<
     string | null
@@ -249,6 +257,7 @@ export function MenuBrowseClient({ menu }: Props) {
                   <MenuProductCard
                     key={p.id}
                     product={p}
+                    formatAmount={formatMenuAmount}
                     priority={lcpPriorityIds.has(p.id)}
                     onSelect={() => openProductDetails(p)}
                   />
@@ -262,6 +271,7 @@ export function MenuBrowseClient({ menu }: Props) {
       <ProductDetailsModal
         key={detailsProduct?.id ?? "menu-details"}
         product={detailsProduct}
+        formatAmount={formatMenuAmount}
         open={detailsOpen}
         onOpenChange={(next) => {
           setDetailsOpen(next);

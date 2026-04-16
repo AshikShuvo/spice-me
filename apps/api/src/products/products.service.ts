@@ -4,10 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { applyFoodVatToProfile } from '../common/food-vat.util.js';
 import {
   isPrismaUniqueViolation,
   uniqueConstraintFieldsFromMeta,
 } from '../common/prisma-error.util.js';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { AddAllergyItemsDto } from './dto/add-allergy-items.dto.js';
 import type { CreateProductDto } from './dto/create-product.dto.js';
@@ -43,6 +45,8 @@ export type ProductProfile = {
   subCategoryId: string | null;
   isPublished: boolean;
   isActive: boolean;
+  /** When true, customer-facing prices skip global food VAT. */
+  isVatExclusive: boolean;
   category: { id: string; name: string };
   subCategory: { id: string; name: string } | null;
   pricing: {
@@ -73,6 +77,7 @@ export type ProductWithRelations = {
   subCategoryId: string | null;
   isPublished: boolean;
   isActive: boolean;
+  isVatExclusive: boolean;
   regularPrice: { toString(): string } | null;
   offerPrice: { toString(): string } | null;
   createdAt: Date;
@@ -99,7 +104,10 @@ export type ProductWithRelations = {
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly platformSettings: PlatformSettingsService,
+  ) {}
 
   /** Throws when offerPrice is set but not strictly below regularPrice. */
   private assertOfferPricing(
@@ -204,6 +212,7 @@ export class ProductsService {
       subCategoryId: p.subCategoryId,
       isPublished: p.isPublished,
       isActive: p.isActive,
+      isVatExclusive: p.isVatExclusive,
       category: p.category,
       subCategory: p.subCategory,
       pricing: {
@@ -269,6 +278,7 @@ export class ProductsService {
         imageUrl: dto.imageUrl.trim(),
         categoryId: dto.categoryId,
         subCategoryId: dto.subCategoryId,
+        isVatExclusive: dto.isVatExclusive ?? false,
         regularPrice: dto.regularPrice,
         offerPrice: dto.offerPrice,
       },
@@ -315,12 +325,17 @@ export class ProductsService {
       }),
       this.prisma.product.count({ where }),
     ]);
-    return {
-      data: rows.map((r) => this.toProfile(r as ProductWithRelations)),
-      total,
-      page,
-      limit,
-    };
+    const data = rows.map((r) => this.toProfile(r as ProductWithRelations));
+    if (!adminView) {
+      const { foodVatPercent } = await this.platformSettings.getOrCreate();
+      return {
+        data: data.map((p) => applyFoodVatToProfile(p, foodVatPercent)),
+        total,
+        page,
+        limit,
+      };
+    }
+    return { data, total, page, limit };
   }
 
   async findOne(id: string, adminView: boolean): Promise<ProductProfile> {
@@ -334,7 +349,12 @@ export class ProductsService {
     if (!adminView && (!product.isPublished || !product.isActive)) {
       throw new NotFoundException('Product not found');
     }
-    return this.toProfile(product as ProductWithRelations);
+    const profile = this.toProfile(product as ProductWithRelations);
+    if (!adminView) {
+      const { foodVatPercent } = await this.platformSettings.getOrCreate();
+      return applyFoodVatToProfile(profile, foodVatPercent);
+    }
+    return profile;
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<ProductProfile> {
@@ -386,6 +406,9 @@ export class ProductsService {
           regularPrice: dto.regularPrice,
         }),
         ...(dto.offerPrice !== undefined && { offerPrice: dto.offerPrice }),
+        ...(dto.isVatExclusive !== undefined && {
+          isVatExclusive: dto.isVatExclusive,
+        }),
       },
       include: PRODUCT_INCLUDE,
     });

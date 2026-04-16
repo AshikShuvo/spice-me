@@ -67,6 +67,7 @@ export default async function AdminLayout({
                   <AdminNavLink href="/admin/restaurant-admins">
                     Restaurant Admins
                   </AdminNavLink>
+                  <AdminNavLink href="/admin/settings">Platform settings</AdminNavLink>
                 </>
               ) : null}
 

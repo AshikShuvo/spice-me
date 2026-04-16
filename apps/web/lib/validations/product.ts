@@ -41,6 +41,7 @@ export const createProductSchema = z
     subCategoryId: optionalSubCategoryId,
     regularPrice: priceField.optional(),
     offerPrice: priceField.optional(),
+    isVatExclusive: z.boolean().optional(),
   })
   .refine(offerPriceCheck, OFFER_PRICE_REFINE);
 
@@ -59,6 +60,7 @@ export const updateProductSchema = z
       .pipe(z.string().min(1).optional()),
     regularPrice: priceField.optional().nullable(),
     offerPrice: priceField.optional().nullable(),
+    isVatExclusive: z.boolean().optional(),
   })
   .refine(offerPriceCheck, OFFER_PRICE_REFINE);
 

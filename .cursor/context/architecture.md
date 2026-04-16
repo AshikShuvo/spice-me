@@ -45,6 +45,7 @@ spice-me/
 | Public menu browse (categories, subcategories, product grid) | complete | [.cursor/context/features/frontend-menu.md](features/frontend-menu.md) |
 | Home hero (fire animation, menu CTA) | complete | [.cursor/context/features/frontend-home-hero.md](features/frontend-home-hero.md) |
 | Restaurant tables & reservations (API + admin + customer reserve) | complete | [.cursor/context/features/table-reservations.md](features/table-reservations.md) |
+| Platform common settings (global food VAT, currency, VAT-exclusive products) | complete | [.cursor/context/features/platform-common-settings.md](features/platform-common-settings.md) |
 
 ## Shared Conventions
 - Bun for all installs; `bun add <pkg> --filter <workspace>`

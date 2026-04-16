@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
+import { usePlatformCurrency } from "@/components/platform-currency/platform-currency-context";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -44,6 +45,7 @@ export function EditVariantDialog({
   onVariantUpdated: (updated: ProductProfile) => void;
 }) {
   const productService = useProductService();
+  const { currencyCode } = usePlatformCurrency();
 
   const form = useForm<UpdateVariantInput>({
     resolver: zodResolver(updateVariantSchema),
@@ -145,7 +147,7 @@ export function EditVariantDialog({
                 name="regularPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Regular price (£)</FormLabel>
+                    <FormLabel>Regular price ({currencyCode})</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -171,7 +173,7 @@ export function EditVariantDialog({
                 name="offerPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Offer price (£)</FormLabel>
+                    <FormLabel>Offer price ({currencyCode})</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

@@ -12,6 +12,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   ProductsService,
@@ -62,6 +63,7 @@ describe('ProductsService', () => {
     subCategoryId: null,
     isPublished: false,
     isActive: true,
+    isVatExclusive: false,
     regularPrice: d('12.00'),
     offerPrice: null,
     createdAt: new Date(),
@@ -80,10 +82,18 @@ describe('ProductsService', () => {
     prisma.$transaction.mockImplementation(async (ops: unknown[]) =>
       Promise.all(ops),
     );
+    const platformSettings = {
+      getOrCreate: jest.fn().mockResolvedValue({
+        foodVatPercent: '0',
+        currencyCode: 'EUR',
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: PlatformSettingsService, useValue: platformSettings },
       ],
     }).compile();
     service = module.get(ProductsService);
@@ -97,6 +107,7 @@ describe('ProductsService', () => {
     it('hasVariants false uses product regularPrice for envelope and display', () => {
       const p = baseRelations();
       const profile = service.toProfile(p);
+      expect(profile.isVatExclusive).toBe(false);
       expect(profile.pricing.hasVariants).toBe(false);
       expect(profile.pricing.regularPrice).toBe('12.00');
       expect(profile.pricing.display.regularPrice).toBe('12.00');

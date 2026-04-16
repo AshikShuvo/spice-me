@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { PlatformCurrencyProvider } from "@/components/platform-currency/platform-currency-context";
 import { Providers } from "@/components/providers";
+import { fetchPlatformSettingsServer } from "@/lib/fetch-platform-settings";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
@@ -28,12 +30,15 @@ export default async function LocaleLayout({
   }
   setRequestLocale(locale);
   const messages = await getMessages();
+  const platformSettings = await fetchPlatformSettingsServer();
 
   return (
     <html lang={locale}>
       <body className="font-ringside-narrow antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>{children}</Providers>
+          <PlatformCurrencyProvider initial={platformSettings}>
+            <Providers>{children}</Providers>
+          </PlatformCurrencyProvider>
         </NextIntlClientProvider>
       </body>
     </html>

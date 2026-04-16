@@ -49,5 +49,16 @@
     "quantity_decrease": "Reduser antall",
     "quantity_increase": "Øk antall",
     "choose_variant": "Velg variant"
+  },
+  "platform_settings": {
+    "title": "Plattforminnstillinger",
+    "intro": "Angi global mat-MVA og valuta for meny og admin. Menypriser inkluderer MVA med mindre produktet er merket MVA-fritt.",
+    "vat_label": "Mat-MVA (%)",
+    "vat_hint": "Brukes på kundepriser i meny. Bruk 0 til skatt er satt opp.",
+    "currency_label": "Valuta",
+    "currency_hint": "ISO-kode for prisvisning.",
+    "save": "Lagre",
+    "saving": "Lagrer…",
+    "save_error": "Kunne ikke lagre"
   }
 }

@@ -8,11 +8,13 @@ import { useForm } from "react-hook-form";
 import { AddVariantDialog } from "@/components/admin/products/catalog/add-variant-dialog";
 import { EditVariantDialog } from "@/components/admin/products/catalog/edit-variant-dialog";
 import { PricingBadge } from "@/components/admin/products/pricing-badge";
+import { usePlatformCurrency } from "@/components/platform-currency/platform-currency-context";
 import { ProductStatusBadge } from "@/components/admin/products/product-status-badge";
 import { DataTable } from "@/components/admin/data-table";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -66,6 +68,7 @@ function buildProductFormDefaults(p: ProductProfile): UpdateProductFormValues {
     offerPrice: p.pricing.offerPrice
       ? Number.parseFloat(p.pricing.offerPrice)
       : undefined,
+    isVatExclusive: p.isVatExclusive === true,
   };
 }
 
@@ -90,6 +93,8 @@ export function ProductDetailClient({
   const [variantBusyId, setVariantBusyId] = useState<string | null>(null);
   const [allergyBusyId, setAllergyBusyId] = useState<string | null>(null);
 
+  const { currencyCode, formatAmount } = usePlatformCurrency();
+
   const hasVariantRows = product.pricing.variants.length > 0;
 
   const form = useForm<UpdateProductFormValues, unknown, UpdateProductInput>({
@@ -100,7 +105,7 @@ export function ProductDetailClient({
   useEffect(() => {
     form.reset(buildProductFormDefaults(product));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.id]);
+  }, [product.id, product.updatedAt]);
 
   const imageUrl = form.watch("imageUrl");
   useEffect(() => {
@@ -381,7 +386,7 @@ export function ProductDetailClient({
                 name="regularPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Regular price (£)</FormLabel>
+                    <FormLabel>Regular price ({currencyCode})</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -413,7 +418,7 @@ export function ProductDetailClient({
                 name="offerPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Offer price (£)</FormLabel>
+                    <FormLabel>Offer price ({currencyCode})</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -436,6 +441,28 @@ export function ProductDetailClient({
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="isVatExclusive"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start gap-3 space-y-0 rounded-md border border-coal-20 p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value === true}
+                      onCheckedChange={(v) => field.onChange(v === true)}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="!mt-0 cursor-pointer font-medium text-coal">
+                      VAT-exclusive product
+                    </FormLabel>
+                    <FormDescription className="text-caption">
+                      Menu shows entered prices only (no global food VAT).
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
             {form.formState.errors.root && (
               <p className="text-body text-destructive" role="alert">
                 {form.formState.errors.root.message}
@@ -503,10 +530,10 @@ export function ProductDetailClient({
                     {v.sortOrder}
                   </TableCell>
                   <TableCell className="text-body text-coal">
-                    £{v.regularPrice}
+                    {formatAmount(v.regularPrice)}
                   </TableCell>
                   <TableCell className="text-body text-neutral-30">
-                    {v.offerPrice ? `£${v.offerPrice}` : "—"}
+                    {v.offerPrice ? formatAmount(v.offerPrice) : "—"}
                   </TableCell>
                   <TableCell>
                     {v.isDefault ? (

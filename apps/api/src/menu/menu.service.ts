@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { applyFoodVatToProfile } from '../common/food-vat.util.js';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PRODUCT_INCLUDE } from '../products/product-include.js';
 import {
@@ -25,6 +27,8 @@ export type MenuResponse = {
   restaurant: { id: string; name: string; code: string } | null;
   categories: MenuCategoryItem[];
   products: ProductProfile[];
+  /** ISO 4217 — matches platform settings (for client formatting). */
+  currencyCode: string;
 };
 
 @Injectable()
@@ -32,6 +36,7 @@ export class MenuService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly productsService: ProductsService,
+    private readonly platformSettings: PlatformSettingsService,
   ) {}
 
   async getMenu(restaurantCode?: string): Promise<MenuResponse> {
@@ -90,12 +95,20 @@ export class MenuService {
     restaurant: MenuResponse['restaurant'],
     productRows: ProductWithRelations[],
   ): Promise<MenuResponse> {
+    const { foodVatPercent, currencyCode } =
+      await this.platformSettings.getOrCreate();
     const profiles = productRows.map((r) => this.productsService.toProfile(r));
     const categoryIdSet = new Set(profiles.map((p) => p.categoryId));
     const categoryIds = [...categoryIdSet];
 
     if (categoryIds.length === 0) {
-      return { scope, restaurant, categories: [], products: [] };
+      return {
+        scope,
+        restaurant,
+        categories: [],
+        products: [],
+        currencyCode,
+      };
     }
 
     const categoryRows = await this.prisma.category.findMany({
@@ -130,7 +143,10 @@ export class MenuService {
       scope,
       restaurant,
       categories,
-      products: filteredProfiles,
+      products: filteredProfiles.map((p) =>
+        applyFoodVatToProfile(p, foodVatPercent),
+      ),
+      currencyCode,
     };
   }
 }

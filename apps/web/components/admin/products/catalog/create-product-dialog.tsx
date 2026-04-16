@@ -5,7 +5,9 @@ import { useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { usePlatformCurrency } from "@/components/platform-currency/platform-currency-context";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +54,7 @@ export function CreateProductDialog({
   const router = useRouter();
   const productService = useProductService();
   const categoryService = useCategoryService();
+  const { currencyCode } = usePlatformCurrency();
 
   const [subcategories, setSubcategories] = useState<SubCategoryProfile[]>([]);
   const [imagePreviewError, setImagePreviewError] = useState(false);
@@ -66,6 +69,7 @@ export function CreateProductDialog({
       subCategoryId: undefined,
       regularPrice: undefined,
       offerPrice: undefined,
+      isVatExclusive: false,
     },
   });
 
@@ -227,7 +231,7 @@ export function CreateProductDialog({
                 name="regularPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Regular price (£)</FormLabel>
+                    <FormLabel>Regular price ({currencyCode})</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -256,7 +260,7 @@ export function CreateProductDialog({
                 name="offerPrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Offer price (£)</FormLabel>
+                    <FormLabel>Offer price ({currencyCode})</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -278,6 +282,28 @@ export function CreateProductDialog({
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="isVatExclusive"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start gap-3 space-y-0 rounded-md border border-coal-20 p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value === true}
+                      onCheckedChange={(v) => field.onChange(v === true)}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="!mt-0 cursor-pointer font-medium text-coal">
+                      VAT-exclusive product
+                    </FormLabel>
+                    <FormDescription className="text-caption">
+                      Menu shows entered prices only (no global food VAT).
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
             {form.formState.errors.root && (
               <p className="text-body text-destructive" role="alert">
                 {form.formState.errors.root.message}

@@ -40,7 +40,9 @@ A full "Products" section in the admin shell, supporting two roles:
 ### Frontend — Layout & Shared Components
 | File | Purpose |
 |---|---|
-| `apps/web/app/[locale]/(admin)/layout.tsx` | Added "Products" sidebar section with role-based links |
+| `apps/web/app/[locale]/(admin)/layout.tsx` | "Products" sidebar + ADMIN **Platform settings** link |
+| `apps/web/app/[locale]/(admin)/admin/settings/page.tsx` | ADMIN: edit global food VAT % and currency (`PATCH /platform/settings`) |
+| `apps/web/components/platform-currency/platform-currency-context.tsx` | Shared currency for admin price labels and `PricingBadge` |
 | `apps/web/components/admin/products/product-status-badge.tsx` | Draft/Published/Inactive badge |
 | `apps/web/components/admin/products/pricing-badge.tsx` | Price display via `ProductPrice` (`pricing.display` + offer strikethrough) |
 

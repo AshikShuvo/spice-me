@@ -16,5 +16,9 @@ export async function fetchMenuPublicClient(
   if (!res.ok) {
     throw new Error(`Menu request failed: ${res.status}`);
   }
-  return (await res.json()) as MenuResponse;
+  const raw = (await res.json()) as MenuResponse & { currencyCode?: string };
+  return {
+    ...raw,
+    currencyCode: raw.currencyCode ?? "EUR",
+  };
 }

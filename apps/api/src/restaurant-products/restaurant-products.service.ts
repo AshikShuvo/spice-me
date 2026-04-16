@@ -10,6 +10,8 @@ import {
   uniqueConstraintFieldsFromMeta,
 } from '../common/prisma-error.util.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { applyFoodVatToProfile } from '../common/food-vat.util.js';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
 import {
   ProductsService,
   type ProductProfile,
@@ -34,6 +36,7 @@ export class RestaurantProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly productsService: ProductsService,
+    private readonly platformSettings: PlatformSettingsService,
   ) {}
 
   private async assertRestaurantAccess(
@@ -130,8 +133,12 @@ export class RestaurantProductsService {
       },
       orderBy: { addedAt: 'desc' },
     });
+    const { foodVatPercent } = await this.platformSettings.getOrCreate();
     return rows.map((r) =>
-      this.productsService.toProfile(r.product as ProductWithRelations),
+      applyFoodVatToProfile(
+        this.productsService.toProfile(r.product as ProductWithRelations),
+        foodVatPercent,
+      ),
     );
   }
 

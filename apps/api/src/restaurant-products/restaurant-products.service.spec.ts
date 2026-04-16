@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '../../generated/prisma/enums.js';
+import { PlatformSettingsService } from '../platform-settings/platform-settings.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ProductsService } from '../products/products.service.js';
 import type { JwtUser } from '../auth/types/jwt-user.type.js';
@@ -39,6 +40,13 @@ describe('RestaurantProductsService', () => {
     updatedAt: new Date('2023-05-05T00:00:00.000Z'),
   };
 
+  const platformSettings = {
+    getOrCreate: jest.fn().mockResolvedValue({
+      foodVatPercent: '0',
+      currencyCode: 'EUR',
+    }),
+  };
+
   const toProfile = jest.fn((p: { id: string }) => ({
     id: p.id,
     title: 'T',
@@ -48,6 +56,7 @@ describe('RestaurantProductsService', () => {
     subCategoryId: null,
     isPublished: true,
     isActive: true,
+    isVatExclusive: false,
     category: { id: 'c1', name: 'Cat' },
     subCategory: null,
     pricing: {
@@ -81,6 +90,7 @@ describe('RestaurantProductsService', () => {
         RestaurantProductsService,
         { provide: PrismaService, useValue: prisma },
         { provide: ProductsService, useValue: productsService },
+        { provide: PlatformSettingsService, useValue: platformSettings },
       ],
     }).compile();
     service = module.get(RestaurantProductsService);
@@ -190,6 +200,7 @@ describe('RestaurantProductsService', () => {
           subCategoryId: null,
           isPublished: true,
           isActive: true,
+          isVatExclusive: false,
           category: { id: 'c1', name: 'Cat' },
           subCategory: null,
           pricing: {

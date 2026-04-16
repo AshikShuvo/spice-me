@@ -97,6 +97,8 @@ export interface ProductProfile {
   subCategoryId: string | null;
   isPublished: boolean;
   isActive: boolean;
+  /** When true, menu prices are entered amounts only (no food VAT). */
+  isVatExclusive?: boolean;
   category: { id: string; name: string };
   subCategory: { id: string; name: string } | null;
   pricing: {

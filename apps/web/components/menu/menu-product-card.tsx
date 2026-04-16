@@ -7,12 +7,18 @@ import type { ProductProfile } from "@/lib/types/admin-api";
 
 type Props = {
   product: ProductProfile;
+  formatAmount: (amount: string | number) => string;
   /** First visible grid images: eager load for LCP (2-col mobile often shows two above the fold). */
   priority?: boolean;
   onSelect?: () => void;
 };
 
-export function MenuProductCard({ product, priority = false, onSelect }: Props) {
+export function MenuProductCard({
+  product,
+  formatAmount,
+  priority = false,
+  onSelect,
+}: Props) {
   const t = useTranslations("menu");
 
   return (
@@ -48,6 +54,7 @@ export function MenuProductCard({ product, priority = false, onSelect }: Props) 
         <div className="mt-auto pt-0.5 md:pt-1">
           <ProductPrice
             pricing={product.pricing}
+            formatAmount={formatAmount}
             className="text-base font-bold text-coal md:text-lg lg:text-xl"
             labels={{
               noPrice: t("no_price"),

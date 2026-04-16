@@ -27,7 +27,9 @@ Customer-facing **Menu** route: category row, subcategory row (including **All**
 | `apps/web/components/menu/menu-browse-client.tsx` | Category/subcategory state, sectioning, grid, product details modal state |
 | `apps/web/components/menu/menu-product-card.tsx` | Clickable card (image, title, description, price) |
 | `apps/web/components/menu/product-details-modal.tsx` | Radix dialog: responsive product sheet, variants, qty, stub add-to-cart |
-| `apps/web/components/menu/product-price.tsx` | Shared price / variants display + exported pricing helpers (`resolveDisplayRow`, `getActiveVariants`, etc.); also used by admin `PricingBadge` |
+| `apps/web/components/menu/product-price.tsx` | Price display via `Intl` + optional `formatAmount`; helpers (`resolveDisplayRow`, `getActiveVariants`, etc.); also used by admin `PricingBadge` (context currency) |
+| `apps/web/components/platform-currency/platform-currency-context.tsx` | `PlatformCurrencyProvider` + `usePlatformCurrency` (from `[locale]/layout` fetch) |
+| `apps/web/lib/money/format-currency.ts` | `formatCurrencyAmount` |
 | `apps/web/components/public-restaurant/public-restaurant-context.tsx` | Client provider: `restaurantCode`, `setRestaurantCode`, LS + `/menu/r/*` URL sync |
 | `apps/web/components/public-restaurant/public-restaurant-picker.tsx` | Header `Select`: all locations + `GET /restaurants/browse`; updates context and `/menu` routes when on menu |
 | `apps/web/lib/fetch-menu-public-client.ts` | Client `GET /menu` (`cache: no-store`) when context changes |
@@ -47,7 +49,7 @@ Customer-facing **Menu** route: category row, subcategory row (including **All**
 
 - `GET /menu` — optional query `restaurantCode`
 - `GET /restaurants/browse` — public; active restaurants as `{ id, name, code }[]`
-- Response: `{ scope, restaurant, categories[], products[] }` — see backend feature doc
+- Response: `{ scope, restaurant, categories[], products[], currencyCode }` — see backend feature doc; `MenuBrowseClient` builds `formatMenuAmount` from `menu.currencyCode` for cards and the details modal.
 
 ## Data Flow
 

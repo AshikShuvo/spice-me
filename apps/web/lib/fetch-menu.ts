@@ -21,7 +21,11 @@ export async function fetchMenu(
       return { ok: false, status: res.status };
     }
 
-    const data = (await res.json()) as MenuResponse;
+    const raw = (await res.json()) as MenuResponse & { currencyCode?: string };
+    const data: MenuResponse = {
+      ...raw,
+      currencyCode: raw.currencyCode ?? "EUR",
+    };
     return { ok: true, data };
   } catch {
     return { ok: false, status: 0 };

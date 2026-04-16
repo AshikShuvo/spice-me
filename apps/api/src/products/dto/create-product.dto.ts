@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsNumber,
   IsOptional,
   IsString,
@@ -45,4 +46,12 @@ export class CreateProductDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   offerPrice?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'When true, menu prices show entered amounts only (no global food VAT).',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isVatExclusive?: boolean;
 }

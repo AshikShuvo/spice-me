@@ -18,4 +18,5 @@ export type MenuResponse = {
   restaurant: { id: string; name: string; code: string } | null;
   categories: MenuCategoryItem[];
   products: ProductProfile[];
+  currencyCode: string;
 };

@@ -34,6 +34,8 @@ Global catalog managed by **ADMIN**: categories, subcategories, allergy items, p
 | `apps/api/src/products/products.service.spec.ts` | Unit tests |
 | `apps/api/src/restaurant-products/restaurant-products.service.spec.ts` | Unit tests |
 | `apps/api/src/menu/*` | Public `GET /menu` (global or restaurant-scoped catalog for browse UI) |
+| `apps/api/src/platform-settings/*` | `GET/PATCH /platform/settings` (global VAT % + currency) |
+| `apps/api/src/common/food-vat.util.ts` | `applyFoodVatToProfile` for customer-facing prices |
 
 ## API Contract
 
@@ -67,11 +69,11 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/products/all` | ADMIN | Paginated list (all states); query: `page`, `limit`, `categoryId`, `subCategoryId` |
-| `GET` | `/products` | public | Paginated **published + active** only; same query |
-| `POST` | `/products` | ADMIN | Create; `subCategoryId` must belong to `categoryId` |
+| `GET` | `/products` | public | Paginated **published + active** only; same query; prices **include** global food VAT unless `isVatExclusive` |
+| `POST` | `/products` | ADMIN | Create; `subCategoryId` must belong to `categoryId`; optional `isVatExclusive` |
 | `GET` | `/products/:id` | optional JWT | **ADMIN** with Bearer: any product; else **published + active** only |
 | `PATCH` | `/products/:id/publish` | ADMIN | `{ isPublished }`; cannot publish inactive product; **no variants:** requires `regularPrice`; **with active variants:** each active variant needs `regularPrice`, and **exactly one** active variant must be `isDefault` |
-| `PATCH` | `/products/:id` | ADMIN | Partial update; **400** if setting `regularPrice`/`offerPrice` while any variant row exists |
+| `PATCH` | `/products/:id` | ADMIN | Partial update; **400** if setting `regularPrice`/`offerPrice` while any variant row exists; optional `isVatExclusive` |
 | `DELETE` | `/products/:id` | ADMIN | Soft delete: `isActive: false`, `isPublished: false` |
 | `POST` | `/products/:id/variants` | ADMIN | Add variant; clears `product.regularPrice` / `offerPrice`; first variant becomes default |
 | `PATCH` | `/products/:id/variants/:variantId` | ADMIN | Update variant (incl. `isActive`, optional `isDefault`) |
@@ -79,19 +81,28 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 | `POST` | `/products/:id/allergy-items` | ADMIN | `{ allergyItemIds: string[] }` (`skipDuplicates`) |
 | `DELETE` | `/products/:id/allergy-items/:allergyItemId` | ADMIN | Remove link |
 
-**Response shape (`ProductProfile`):** includes `pricing: { hasVariants, regularPrice, offerPrice, display: { regularPrice, offerPrice }, variants[] }`. If any **variant row** exists, product-level `regularPrice`/`offerPrice` in the envelope are `null`; `hasVariants` is true when there is at least one **active** variant. Each variant has `regularPrice`, optional `offerPrice`, `isActive`, `isDefault`. **`display`** is the menu-facing row: product-level prices when no active variants, otherwise the **default active variant’s** prices (fallback: first active). Money values are **strings** (decimal serialization).
+**Response shape (`ProductProfile`):** includes `isVatExclusive` and `pricing: { hasVariants, regularPrice, offerPrice, display: { regularPrice, offerPrice }, variants[] }`. If any **variant row** exists, product-level `regularPrice`/`offerPrice` in the envelope are `null`; `hasVariants` is true when there is at least one **active** variant. Each variant has `regularPrice`, optional `offerPrice`, `isActive`, `isDefault`. **`display`** is the menu-facing row: product-level prices when no active variants, otherwise the **default active variant’s** prices (fallback: first active). Money values are **strings** (decimal serialization).
+
+**Net vs gross:** Admin and `GET /products/all` return **net** (stored) amounts. Public `GET /products`, `GET /products/:id` (non-admin), `GET /menu`, and public `GET /restaurants/:id/products` return **gross** menu prices (net × (1 + platform food VAT / 100), 2 dp) except when `isVatExclusive` is true (no VAT uplift).
+
+### Platform settings
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/platform/settings` | public | `{ foodVatPercent: string, currencyCode: string }` |
+| `PATCH` | `/platform/settings` | ADMIN | Update global VAT % and/or currency |
 
 ### Menu (public browse)
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/menu` | public | Full menu payload for customer browse UI (unpaginated). Query: optional `restaurantCode` (e.g. `RQ0001`). Without code: all **published + active** products. With code: products linked to that **active** restaurant with `RestaurantProduct.isAvailable` (same rules as restaurant menu). Returns `scope`, optional `restaurant`, `categories` (only categories that appear on the menu, each with active ordered `subCategories`), and `products` as `ProductProfile[]`. **404** if `restaurantCode` does not match an active restaurant. |
+| `GET` | `/menu` | public | Full menu payload for customer browse UI (unpaginated). Query: optional `restaurantCode` (e.g. `RQ0001`). Without code: all **published + active** products. With code: products linked to that **active** restaurant with `RestaurantProduct.isAvailable` (same rules as restaurant menu). Returns `scope`, optional `restaurant`, `categories` (only categories that appear on the menu, each with active ordered `subCategories`), `products` as `ProductProfile[]` (**gross** prices), and `currencyCode`. **404** if `restaurantCode` does not match an active restaurant. |
 
 ### Restaurant products
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/restaurants/:restaurantId/products` | public | Products linked with `isAvailable: true` and published+active |
+| `GET` | `/restaurants/:restaurantId/products` | public | Products linked with `isAvailable: true` and published+active (**gross** prices for browse) |
 | `POST` | `/restaurants/:restaurantId/products` | RESTAURANT_ADMIN | `{ productId }`; product must be published; **403** if not assigned; **409** if duplicate link |
 | `PATCH` | `/restaurants/:restaurantId/products/:productId` | RESTAURANT_ADMIN | `{ isAvailable }` |
 | `DELETE` | `/restaurants/:restaurantId/products/:productId` | RESTAURANT_ADMIN | Remove link |
@@ -100,7 +111,8 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 
 See `apps/api/prisma/schema.prisma` for full definitions. Highlights:
 
-- `Product` optional `regularPrice` / `offerPrice`; `ProductVariant` has required `regularPrice`, optional `offerPrice`, and `isDefault` (exactly one default among active variants, enforced in service).
+- `Product` optional `regularPrice` / `offerPrice`, `isVatExclusive` (skip food VAT on customer-facing prices); `ProductVariant` has required `regularPrice`, optional `offerPrice`, and `isDefault` (exactly one default among active variants, enforced in service).
+- `PlatformCommonSettings` singleton (`id = default`): `foodVatPercent`, `currencyCode` (defaults 0 / EUR).
 - `RestaurantProduct` unique `(restaurantId, productId)`.
 - `Ingredient` / `ProductIngredient`: schema only for future add/exclude flows (no API yet).
 
@@ -120,6 +132,7 @@ No new variables; uses existing `DATABASE_URL` and JWT secrets.
 
 - Auth JWT + `RolesGuard`; see [auth-user-management.md](auth-user-management.md).
 - Restaurant assignments; see [restaurant-module.md](restaurant-module.md).
+- Platform settings: [platform-common-settings.md](platform-common-settings.md).
 
 ## Key Decisions & Gotchas
 

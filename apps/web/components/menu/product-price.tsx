@@ -2,6 +2,7 @@ import type {
   ProductProfile,
   ProductVariantProfile,
 } from "@/lib/types/admin-api";
+import { usePlatformCurrency } from "@/components/platform-currency/platform-currency-context";
 import { cn } from "@/lib/utils";
 
 export type ProductPriceLabels = {
@@ -16,6 +17,8 @@ type Props = {
   pricing: ProductProfile["pricing"];
   className?: string;
   labels?: Partial<ProductPriceLabels>;
+  /** Prefer menu payload currency over global context when set. */
+  formatAmount?: (amount: string | number) => string;
 };
 
 /** Matches API `toProfile` when `pricing.display` is missing (stale cache / older server). */
@@ -76,8 +79,10 @@ export function unitPriceFromDisplayRow(row: {
   return Number.isFinite(n) ? n : null;
 }
 
-export function ProductPrice({ pricing, className, labels }: Props) {
+export function ProductPrice({ pricing, className, labels, formatAmount }: Props) {
   const L = { ...defaultLabels, ...labels };
+  const ctx = usePlatformCurrency();
+  const fmt = formatAmount ?? ctx.formatAmount;
   const { regularPrice: reg, offerPrice: offer } = resolveDisplayRow(pricing);
 
   if (!reg) {
@@ -90,14 +95,12 @@ export function ProductPrice({ pricing, className, labels }: Props) {
   if (offer) {
     return (
       <span className={cn("text-body text-coal", className)}>
-        £{offer}{" "}
+        {fmt(offer)}{" "}
         <span className="font-normal text-neutral-30 line-through decoration-primary decoration-2">
-          £{reg}
+          {fmt(reg)}
         </span>
       </span>
     );
   }
-  return (
-    <span className={cn("text-body text-coal", className)}>£{reg}</span>
-  );
+  return <span className={cn("text-body text-coal", className)}>{fmt(reg)}</span>;
 }

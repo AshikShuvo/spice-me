@@ -22,6 +22,15 @@ enum TableReservationStatus {
   PENDING
 }
 
+/// Singleton row `id = "default"` — global food VAT % and display currency.
+model PlatformCommonSettings {
+  id              String   @id @default("default")
+  foodVatPercent  Decimal  @default(0) @db.Decimal(5, 2)
+  currencyCode    String   @default("EUR")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model User {
   id                   String    @id @default(cuid())
   email                String    @unique
@@ -162,6 +171,8 @@ model Product {
   subCategoryId String?
   isPublished   Boolean  @default(false)
   isActive       Boolean  @default(true)
+  /// When true, customer-facing prices skip global food VAT (menu = stored amounts).
+  isVatExclusive Boolean  @default(false)
   regularPrice   Decimal? @db.Decimal(10, 2)
   offerPrice     Decimal? @db.Decimal(10, 2)
   createdAt      DateTime @default(now())

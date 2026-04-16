@@ -26,20 +26,19 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   product: ProductProfile | null;
+  formatAmount: (amount: string | number) => string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-function formatGbpTotal(amount: number): string {
-  return `£${amount.toFixed(2)}`;
-}
-
 function VariantChipPrice({
   variant,
   selected,
+  formatAmount,
 }: {
   variant: ProductVariantProfile;
   selected: boolean;
+  formatAmount: (amount: string | number) => string;
 }) {
   const reg = variant.regularPrice;
   const offer = variant.offerPrice;
@@ -65,23 +64,28 @@ function VariantChipPrice({
   if (offer) {
     return (
       <span className="flex w-full flex-wrap items-baseline justify-center gap-x-1.5 gap-y-0.5 text-center">
-        <span className={priceClass}>£{offer}</span>
+        <span className={priceClass}>{formatAmount(offer)}</span>
         <span
           className={cn(
             "tabular-nums text-sm font-normal line-through decoration-2 md:text-base",
             strike,
           )}
         >
-          £{reg}
+          {formatAmount(reg)}
         </span>
       </span>
     );
   }
-  return <span className={cn(priceClass, "block w-full text-center")}>£{reg}</span>;
+  return (
+    <span className={cn(priceClass, "block w-full text-center")}>
+      {formatAmount(reg)}
+    </span>
+  );
 }
 
 export function ProductDetailsModal({
   product,
+  formatAmount,
   open,
   onOpenChange,
 }: Props) {
@@ -199,6 +203,7 @@ export function ProductDetailsModal({
                               <VariantChipPrice
                                 variant={v}
                                 selected={selected}
+                                formatAmount={formatAmount}
                               />
                             </button>
                           );
@@ -251,7 +256,7 @@ export function ProductDetailsModal({
                       }}
                     >
                       {totalPrice != null
-                        ? `${t("add_to_cart")} · ${formatGbpTotal(totalPrice)}`
+                        ? `${t("add_to_cart")} · ${formatAmount(totalPrice)}`
                         : t("no_price")}
                     </Button>
                   </div>
