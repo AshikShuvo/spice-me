@@ -1,3 +1,4 @@
+import { AdminNavLink } from "@/components/admin/admin-nav-link";
 import { AdminSidebarLogoutButton } from "@/components/admin/admin-sidebar-logout-button";
 import { RestaurantAdminRestaurantSelect } from "@/components/admin/restaurant-admin-restaurant-select";
 import { SelectedRestaurantProvider } from "@/components/admin/selected-restaurant-context";
@@ -59,26 +60,13 @@ export default async function AdminLayout({
               <RestaurantAdminRestaurantSelect />
             ) : null}
             <nav className="mt-4 flex min-h-0 flex-1 flex-col gap-2">
-              <Link
-                href="/admin/dashboard"
-                className="text-body text-coal hover:text-peppes-red"
-              >
-                Dashboard
-              </Link>
+              <AdminNavLink href="/admin/dashboard">Dashboard</AdminNavLink>
               {role === "ADMIN" ? (
                 <>
-                  <Link
-                    href="/admin/restaurants"
-                    className="text-body text-coal hover:text-peppes-red"
-                  >
-                    Restaurants
-                  </Link>
-                  <Link
-                    href="/admin/restaurant-admins"
-                    className="text-body text-coal hover:text-peppes-red"
-                  >
+                  <AdminNavLink href="/admin/restaurants">Restaurants</AdminNavLink>
+                  <AdminNavLink href="/admin/restaurant-admins">
                     Restaurant Admins
-                  </Link>
+                  </AdminNavLink>
                 </>
               ) : null}
 
@@ -88,54 +76,27 @@ export default async function AdminLayout({
                 </p>
                 {role === "ADMIN" ? (
                   <div className="flex flex-col gap-2">
-                    <Link
-                      href="/admin/products"
-                      className="text-body text-coal hover:text-peppes-red"
-                    >
+                    <AdminNavLink href="/admin/products" match="exact">
                       Overview
-                    </Link>
-                    <Link
-                      href="/admin/products/categories"
-                      className="text-body text-coal hover:text-peppes-red"
-                    >
-                      Categories
-                    </Link>
-                    <Link
-                      href="/admin/products/subcategories"
-                      className="text-body text-coal hover:text-peppes-red"
-                    >
+                    </AdminNavLink>
+                    <AdminNavLink href="/admin/products/categories">Categories</AdminNavLink>
+                    <AdminNavLink href="/admin/products/subcategories">
                       Sub Categories
-                    </Link>
-                    <Link
-                      href="/admin/products/allergy-items"
-                      className="text-body text-coal hover:text-peppes-red"
-                    >
+                    </AdminNavLink>
+                    <AdminNavLink href="/admin/products/allergy-items">
                       Allergy Items
-                    </Link>
-                    <Link
-                      href="/admin/products/catalog"
-                      className="text-body text-coal hover:text-peppes-red"
-                    >
-                      Products
-                    </Link>
+                    </AdminNavLink>
+                    <AdminNavLink href="/admin/products/catalog">Products</AdminNavLink>
                   </div>
                 ) : (
-                  <Link
-                    href="/admin/products"
-                    className="text-body text-coal hover:text-peppes-red"
-                  >
+                  <AdminNavLink href="/admin/products" match="exact">
                     My Products
-                  </Link>
+                  </AdminNavLink>
                 )}
               </div>
 
               {role === "RESTAURANT_ADMIN" ? (
-                <Link
-                  href="/admin/tables"
-                  className="text-body text-coal hover:text-peppes-red"
-                >
-                  Tables & reservations
-                </Link>
+                <AdminNavLink href="/admin/tables">Tables & reservations</AdminNavLink>
               ) : null}
 
               <Link href="/" className="text-body text-neutral-30 hover:text-coal">
