@@ -2,7 +2,7 @@
 
 ## Summary
 
-Customer-facing **Menu** route: category row, subcategory row (including **All**), responsive product grid with section headers when **All** is selected. Tapping a product opens a **details modal** (image, description, optional multi-variant chips, quantity stepper, **Add to cart** showing line total). Cart is not wired yet — the CTA only `console.log`s. Data comes from public `GET /menu` (optional `restaurantCode` query on the API). The page uses **ISR** (`revalidate = 60`) and **static params** so HTML is pre-rendered; all categories ship in one payload (client-side filtering).
+Customer-facing **Menu** route: category row, subcategory row (including **All**), responsive product grid with section headers when **All** is selected. Tapping a product opens a **details modal** (image, description, optional multi-variant chips, optional **Allergens** switch revealing comma-separated names, quantity stepper, **Add to cart** showing line total). Cart is not wired yet — the CTA only `console.log`s. Data comes from public `GET /menu` (optional `restaurantCode` query on the API). The page uses **ISR** (`revalidate = 60`) and **static params** so HTML is pre-rendered; all categories ship in one payload (client-side filtering).
 
 **Public location context:** the shared app header includes a **location** `Select` backed by `GET /restaurants/browse`. The choice is stored in `localStorage` and synced from `/menu/r/{code}` URLs. Browsing `/menu` without a selection shows the **global** catalog; choosing a location refetches the menu client-side when the server-rendered payload does not already match. The **Reserve** page uses the same selection (via `fetchMenuPublicClient`) to resolve `restaurantId` for tables and booking.
 
@@ -26,7 +26,7 @@ Customer-facing **Menu** route: category row, subcategory row (including **All**
 | `apps/web/lib/fetch-menu.ts` | Server-side `fetchMenu` using `NEXT_PUBLIC_API_URL` (`next.revalidate: 60`) |
 | `apps/web/components/menu/menu-browse-client.tsx` | Category/subcategory state, sectioning, grid, product details modal state |
 | `apps/web/components/menu/menu-product-card.tsx` | Clickable card (image, title, description, price) |
-| `apps/web/components/menu/product-details-modal.tsx` | Radix dialog: responsive product sheet, variants, qty, stub add-to-cart |
+| `apps/web/components/menu/product-details-modal.tsx` | Radix dialog: responsive product sheet, variants, allergens toggle + list, qty, stub add-to-cart |
 | `apps/web/components/menu/product-price.tsx` | Price display via `Intl` + optional `formatAmount`; helpers (`resolveDisplayRow`, `getActiveVariants`, etc.); also used by admin `PricingBadge` (context currency) |
 | `apps/web/components/platform-currency/platform-currency-context.tsx` | `PlatformCurrencyProvider` + `usePlatformCurrency` (from `[locale]/layout` fetch) |
 | `apps/web/lib/money/format-currency.ts` | `formatCurrencyAmount` |

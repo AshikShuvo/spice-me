@@ -48,7 +48,8 @@
     "add_to_cart": "Legg i handlekurv",
     "quantity_decrease": "Reduser antall",
     "quantity_increase": "Øk antall",
-    "choose_variant": "Velg variant"
+    "choose_variant": "Velg variant",
+    "allergies_toggle": "Allergener"
   },
   "platform_settings": {
     "title": "Plattforminnstillinger",

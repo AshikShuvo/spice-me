@@ -11,6 +11,8 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   getActiveVariants,
   getDefaultActiveVariant,
@@ -105,12 +107,19 @@ export function ProductDetailsModal({
     string | null
   >(null);
   const [quantity, setQuantity] = React.useState(1);
+  const [showAllergens, setShowAllergens] = React.useState(false);
 
   React.useEffect(() => {
     if (!product) return;
     setQuantity(1);
+    setShowAllergens(false);
     const def = getDefaultActiveVariant(product.pricing);
     setSelectedVariantId(def?.id ?? null);
+  }, [product]);
+
+  const allergenNames = React.useMemo(() => {
+    if (!product?.allergyItems?.length) return "";
+    return product.allergyItems.map((a) => a.name).join(", ");
   }, [product]);
 
   const unitPrice = React.useMemo(() => {
@@ -209,6 +218,30 @@ export function ProductDetailsModal({
                           );
                         })}
                       </div>
+                    </div>
+                  ) : null}
+
+                  {allergenNames ? (
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Switch
+                          id="product-allergens-toggle"
+                          checked={showAllergens}
+                          onCheckedChange={setShowAllergens}
+                          aria-expanded={showAllergens}
+                        />
+                        <Label
+                          htmlFor="product-allergens-toggle"
+                          className="cursor-pointer text-sm font-medium text-coal"
+                        >
+                          {t("allergies_toggle")}
+                        </Label>
+                      </div>
+                      {showAllergens ? (
+                        <span className="min-w-0 text-sm leading-snug text-neutral-30">
+                          {allergenNames}
+                        </span>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>

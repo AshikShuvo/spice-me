@@ -48,7 +48,8 @@
     "add_to_cart": "Add to cart",
     "quantity_decrease": "Decrease quantity",
     "quantity_increase": "Increase quantity",
-    "choose_variant": "Choose option"
+    "choose_variant": "Choose option",
+    "allergies_toggle": "Allergens"
   },
   "platform_settings": {
     "title": "Platform settings",
