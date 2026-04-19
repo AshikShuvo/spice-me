@@ -24,7 +24,7 @@ export default async function AdminPlatformSettingsPage({ params }: Props) {
   }
 
   const t = await getTranslations("platform_settings");
-  const initial = await fetchPlatformSettingsServer();
+  const initial = await fetchPlatformSettingsServer({ noStore: true });
 
   return (
     <div className="space-y-6">

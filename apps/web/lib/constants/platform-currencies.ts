@@ -8,6 +8,7 @@ export const PLATFORM_CURRENCY_OPTIONS = [
   "USD",
   "CHF",
   "PLN",
+  "BDT",
 ] as const;
 
 export type PlatformCurrencyOption = (typeof PLATFORM_CURRENCY_OPTIONS)[number];

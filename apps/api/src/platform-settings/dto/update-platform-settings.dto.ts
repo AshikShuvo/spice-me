@@ -11,6 +11,7 @@ export const PLATFORM_CURRENCY_CODES = [
   'USD',
   'CHF',
   'PLN',
+  'BDT',
 ] as const;
 
 export type PlatformCurrencyCode = (typeof PLATFORM_CURRENCY_CODES)[number];

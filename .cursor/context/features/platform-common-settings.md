@@ -27,7 +27,7 @@ Singleton **platform** settings store global **food VAT %** and **ISO currency**
 | `apps/api/src/restaurant-products/restaurant-products.service.ts` | VAT on `findAvailable` |
 | `apps/web/lib/fetch-platform-settings.ts` | RSC fetch for settings |
 | `apps/web/components/platform-currency/platform-currency-context.tsx` | Context + client refresh |
-| `apps/web/lib/money/format-currency.ts` | `formatCurrencyAmount` |
+| `apps/web/lib/money/format-currency.ts` | `formatCurrencyAmount`, `formatMenuCurrencyAmount` (BDT → ৳ on public menu) |
 | `apps/web/components/menu/product-price.tsx` | Menu pricing display |
 | `apps/web/lib/validations/product.ts` | `isVatExclusive` on create/update product |
 
@@ -62,6 +62,8 @@ isVatExclusive Boolean @default(false)
 
 ## Gotchas
 
+- **Next.js fetch cache:** `fetchPlatformSettingsServer()` uses `revalidate: 60` for layout/public reads. The admin platform settings page passes `{ noStore: true }` so reloads and `router.refresh()` after PATCH are not served stale data from the Data Cache.
 - **Customer vs admin prices:** Only anonymous/public product reads and menu apply VAT; `GET /products/all` and admin `GET /products/:id` return net.
 - **VAT-exclusive:** `isVatExclusive` skips the multiplier for that product’s entire `pricing` block (including variants).
 - **Web provider:** `PlatformCurrencyProvider` lives in `[locale]/layout.tsx`; menu still passes `formatMenuAmount` from `menu.currencyCode` for consistency with the menu payload.
+- **BDT on menu:** Public menu uses `formatMenuCurrencyAmount`, which renders amounts as `৳1,234.56`.

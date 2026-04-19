@@ -7,7 +7,7 @@ import { MenuProductCard } from "@/components/menu/menu-product-card";
 import { ProductDetailsModal } from "@/components/menu/product-details-modal";
 import { usePublicRestaurant } from "@/components/public-restaurant/public-restaurant-context";
 import { fetchMenuPublicClient } from "@/lib/fetch-menu-public-client";
-import { formatCurrencyAmount } from "@/lib/money/format-currency";
+import { formatMenuCurrencyAmount } from "@/lib/money/format-currency";
 import type { MenuCategoryItem, MenuResponse } from "@/lib/types/menu-api";
 import type { ProductProfile } from "@/lib/types/admin-api";
 import { cn } from "@/lib/utils";
@@ -108,7 +108,7 @@ export function MenuBrowseClient({ menu }: Props) {
 
   const formatMenuAmount = React.useCallback(
     (amount: string | number) =>
-      formatCurrencyAmount(amount, menuState.currencyCode, locale),
+      formatMenuCurrencyAmount(amount, menuState.currencyCode, locale),
     [menuState.currencyCode, locale],
   );
 

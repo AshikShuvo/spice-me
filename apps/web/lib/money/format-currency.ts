@@ -24,3 +24,28 @@ export function formatCurrencyAmount(
     }).format(n);
   }
 }
+
+/**
+ * Customer menu prices. For BDT (Bangladeshi taka), prefixes the amount with ৳ (U+09F3).
+ */
+export function formatMenuCurrencyAmount(
+  amount: string | number,
+  currencyCode: string,
+  locale: string,
+): string {
+  if (currencyCode === "BDT") {
+    const n = typeof amount === "string" ? Number.parseFloat(amount) : amount;
+    if (!Number.isFinite(n)) {
+      return "";
+    }
+    try {
+      return `৳${new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(n)}`;
+    } catch {
+      return `৳${n.toFixed(2)}`;
+    }
+  }
+  return formatCurrencyAmount(amount, currencyCode, locale);
+}
