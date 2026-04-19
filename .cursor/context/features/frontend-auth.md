@@ -36,7 +36,9 @@ status: complete
 | `apps/web/lib/auth-return-path.ts` | `captureAuthReturnPath` / `consumeAuthReturnPath`; fallback after auth is **`/menu`** if no path was stored |
 | `apps/web/components/auth/auth-modal-actions-context.tsx` | `completeSuccessfulAuth()` — refresh + single `replace` (avoids double navigation with dialog `onOpenChange`) |
 | `apps/web/components/header/*` | `Header`, `NavLinks`, `UserMenuButton` |
-| `apps/web/app/[locale]/(app)/@modal/(.)auth/*/page.tsx` | Intercepted modal pages |
+| `apps/web/app/[locale]/(app)/@modal/(.)auth/*/page.tsx` | Intercepted auth modal pages |
+| `apps/web/app/[locale]/(app)/@modal/(.)menu/product/[productId]/page.tsx` | Intercepted `/menu/product/:id` modal (see [frontend-menu.md](features/frontend-menu.md)) |
+| `apps/web/app/[locale]/(app)/@modal/(.)product/[productId]/page.tsx` | Intercepted `/product/:id` modal |
 | `apps/web/app/[locale]/(app)/auth/*/page.tsx` | Full-page auth URLs use `AuthModal` + forms (`dismissNavigate="replace-home"`) |
 | `apps/web/components.json` | shadcn/ui CLI (`new-york`, Tailwind v4); `tailwind.css` → `app/globals.css`; aliases `@/components`, `@/lib/utils`, `@/components/ui` |
 | `apps/web/app/globals.css` | Tailwind entry + `@source` for `components/`, `lib/`, `app/`; imports `@repo/tailwind-config`, `./shadcn-theme.css`, `tw-animate-css` |

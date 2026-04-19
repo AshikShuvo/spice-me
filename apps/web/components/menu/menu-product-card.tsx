@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { ProductPrice } from "@/components/menu/product-price";
+import { Link } from "@/i18n/navigation";
 import type { ProductProfile } from "@/lib/types/admin-api";
 
 type Props = {
@@ -10,23 +11,22 @@ type Props = {
   formatAmount: (amount: string | number) => string;
   /** First visible grid images: eager load for LCP (2-col mobile often shows two above the fold). */
   priority?: boolean;
-  onSelect?: () => void;
+  href: string;
 };
 
 export function MenuProductCard({
   product,
   formatAmount,
   priority = false,
-  onSelect,
+  href,
 }: Props) {
   const t = useTranslations("menu");
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      disabled={!onSelect}
-      className="group flex min-w-0 w-full cursor-pointer flex-col gap-1 rounded-md text-left transition-[box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 disabled:cursor-default md:gap-1.5"
+    <Link
+      href={href}
+      scroll={false}
+      className="group flex min-w-0 w-full cursor-pointer flex-col gap-1 rounded-md text-left transition-[box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 md:gap-1.5"
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-md md:rounded-lg">
         {/*
@@ -62,6 +62,6 @@ export function MenuProductCard({
           />
         </div>
       </div>
-    </button>
+    </Link>
   );
 }
