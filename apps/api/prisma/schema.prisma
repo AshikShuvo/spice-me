@@ -175,6 +175,8 @@ model Product {
   isVatExclusive Boolean  @default(false)
   regularPrice   Decimal? @db.Decimal(10, 2)
   offerPrice     Decimal? @db.Decimal(10, 2)
+  /// Max optional extras per line item; null = unlimited.
+  maxOptionalIngredients Int?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -235,7 +237,33 @@ model Ingredient {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  productIngredients ProductIngredient[]
+  productIngredients       ProductIngredient[]
+  ingredientTemplateItems IngredientTemplateItem[]
+}
+
+model IngredientTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items IngredientTemplateItem[]
+}
+
+model IngredientTemplateItem {
+  id           String   @id @default(cuid())
+  templateId   String
+  ingredientId String
+  extraPrice   Decimal  @db.Decimal(10, 2)
+  sortOrder    Int      @default(0)
+
+  template   IngredientTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  ingredient Ingredient         @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@unique([templateId, ingredientId])
+  @@index([templateId])
 }
 
 model ProductIngredient {
@@ -246,6 +274,7 @@ model ProductIngredient {
   canExclude   Boolean  @default(false)
   canAdd       Boolean  @default(false)
   extraPrice   Decimal? @db.Decimal(10, 2)
+  sortOrder    Int      @default(0)
 
   product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])

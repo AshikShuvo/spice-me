@@ -31,10 +31,13 @@ A full "Products" section in the admin shell, supporting two roles:
 |---|---|
 | `apps/web/lib/services/category-server.service.ts` | RSC: `getCategoriesServer()`, `getCategoryServer(id)` |
 | `apps/web/lib/services/allergy-item-server.service.ts` | RSC: `getAllergyItemsServer()` |
+| `apps/web/lib/services/ingredient-server.service.ts` | RSC: ingredients + templates |
 | `apps/web/lib/services/product-server.service.ts` | RSC: `getProductsAdminServer(page, limit, ...)`, `getProductServer(id)` |
 | `apps/web/lib/services/use-category-service.ts` | Client hook: CRUD for categories + subcategories |
 | `apps/web/lib/services/use-allergy-item-service.ts` | Client hook: CRUD for allergy items |
-| `apps/web/lib/services/use-product-service.ts` | Client hook: full product + variant + allergy management |
+| `apps/web/lib/services/use-ingredient-service.ts` | Client hook: ingredient CRUD |
+| `apps/web/lib/services/use-ingredient-template-service.ts` | Client hook: template CRUD |
+| `apps/web/lib/services/use-product-service.ts` | Client hook: product + variants + allergies + product ingredients / template apply |
 | `apps/web/lib/services/use-restaurant-product-service.ts` | Client hook: manage restaurant-linked products |
 
 ### Frontend — Layout & Shared Components
@@ -54,7 +57,10 @@ A full "Products" section in the admin shell, supporting two roles:
 | `/admin/products/subcategories` | `admin/products/subcategories/page.tsx` | `subcategories/subcategory-list-client.tsx`, `create-subcategory-dialog.tsx`, `edit-subcategory-dialog.tsx` |
 | `/admin/products/allergy-items` | `admin/products/allergy-items/page.tsx` | `allergy-items/allergy-item-list-client.tsx`, `create-allergy-item-dialog.tsx`, `edit-allergy-item-dialog.tsx` |
 | `/admin/products/catalog` | `admin/products/catalog/page.tsx` | `catalog/product-list-client.tsx`, `catalog/create-product-dialog.tsx` |
-| `/admin/products/catalog/[id]` | `admin/products/catalog/[id]/page.tsx` | `catalog/product-detail-client.tsx`, `add-variant-dialog.tsx`, `edit-variant-dialog.tsx` |
+| `/admin/products/ingredients` | `admin/products/ingredients/page.tsx` | `ingredients/ingredient-list-client.tsx`, create/edit dialogs |
+| `/admin/products/ingredient-templates` | `admin/products/ingredient-templates/page.tsx` | `ingredient-templates/ingredient-templates-list-client.tsx`, `create-ingredient-template-dialog.tsx` |
+| `/admin/products/ingredient-templates/[id]` | `admin/products/ingredient-templates/[id]/page.tsx` | `ingredient-templates/ingredient-template-detail-client.tsx` |
+| `/admin/products/catalog/[id]` | `admin/products/catalog/[id]/page.tsx` | `catalog/product-detail-client.tsx` (optional extras block), variant dialogs |
 
 ---
 

@@ -64,6 +64,7 @@ describe('ProductsService', () => {
     isPublished: false,
     isActive: true,
     isVatExclusive: false,
+    maxOptionalIngredients: null,
     regularPrice: d('12.00'),
     offerPrice: null,
     createdAt: new Date(),
@@ -72,6 +73,7 @@ describe('ProductsService', () => {
     subCategory: null,
     variants: [],
     allergyItems: [],
+    ingredients: [],
     ...overrides,
   });
 

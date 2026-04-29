@@ -61,6 +61,7 @@ export const updateProductSchema = z
     regularPrice: priceField.optional().nullable(),
     offerPrice: priceField.optional().nullable(),
     isVatExclusive: z.boolean().optional(),
+    maxOptionalIngredients: z.union([z.number().int().min(1), z.null()]).optional(),
   })
   .refine(offerPriceCheck, OFFER_PRICE_REFINE);
 
@@ -90,3 +91,16 @@ export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type UpdateProductFormValues = z.input<typeof updateProductSchema>;
 export type CreateVariantInput = z.infer<typeof createVariantSchema>;
 export type UpdateVariantInput = z.infer<typeof updateVariantSchema>;
+
+export const upsertProductIngredientSchema = z.object({
+  ingredientId: z.string().min(1),
+  extraPrice: priceField,
+  isDefault: z.boolean().optional(),
+  canExclude: z.boolean().optional(),
+  canAdd: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).optional(),
+});
+
+export type UpsertProductIngredientInput = z.infer<
+  typeof upsertProductIngredientSchema
+>;

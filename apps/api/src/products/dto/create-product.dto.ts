@@ -1,12 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -54,4 +56,15 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   isVatExclusive?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Max optional extras per line item; omit or null for no limit (min 1 when set).',
+    nullable: true,
+  })
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== null && v !== undefined)
+  @IsInt()
+  @Min(1)
+  maxOptionalIngredients?: number | null;
 }

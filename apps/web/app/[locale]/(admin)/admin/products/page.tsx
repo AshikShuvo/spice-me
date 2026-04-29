@@ -7,6 +7,10 @@ import { ProductsOverviewClient } from "@/components/admin/products/products-ove
 import { RestaurantProductsClient } from "@/components/admin/products/restaurant-products-client";
 import { getAllergyItemsServer } from "@/lib/services/allergy-item-server.service";
 import { getCategoriesServer } from "@/lib/services/category-server.service";
+import {
+  getIngredientTemplatesServer,
+  getIngredientsServer,
+} from "@/lib/services/ingredient-server.service";
 import { getProductsAdminServer } from "@/lib/services/product-server.service";
 
 export function generateStaticParams() {
@@ -31,12 +35,17 @@ export default async function AdminProductsPage({ params }: Props) {
   let categories;
   let products;
   let allergyItems;
+  let ingredients;
+  let templates;
   try {
-    [categories, products, allergyItems] = await Promise.all([
-      getCategoriesServer(),
-      getProductsAdminServer(1, 5),
-      getAllergyItemsServer(),
-    ]);
+    [categories, products, allergyItems, ingredients, templates] =
+      await Promise.all([
+        getCategoriesServer(),
+        getProductsAdminServer(1, 5),
+        getAllergyItemsServer(),
+        getIngredientsServer(),
+        getIngredientTemplatesServer(),
+      ]);
   } catch {
     notFound();
   }
@@ -47,6 +56,8 @@ export default async function AdminProductsPage({ params }: Props) {
       recentProducts={products.data}
       totalProducts={products.total}
       allergyItems={allergyItems}
+      ingredientCount={ingredients.length}
+      templateCount={templates.length}
     />
   );
 }

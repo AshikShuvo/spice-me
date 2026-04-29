@@ -13,6 +13,7 @@ function baseProfile(overrides: Partial<ProductProfile> = {}): ProductProfile {
     isPublished: true,
     isActive: true,
     isVatExclusive: false,
+    maxOptionalIngredients: null,
     category: { id: 'c1', name: 'Cat' },
     subCategory: null,
     pricing: {
@@ -23,6 +24,8 @@ function baseProfile(overrides: Partial<ProductProfile> = {}): ProductProfile {
       variants: [],
     },
     allergyItems: [],
+    ingredientLinks: [],
+    optionalIngredients: [],
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

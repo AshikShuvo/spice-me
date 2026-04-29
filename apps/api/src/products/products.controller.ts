@@ -26,6 +26,7 @@ import { ListProductsQueryDto } from './dto/list-products-query.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { UpdateProductPublishDto } from './dto/update-product-publish.dto.js';
 import { UpdateVariantDto } from './dto/update-variant.dto.js';
+import { UpsertProductIngredientDto } from './dto/upsert-product-ingredient.dto.js';
 import { ProductsService, type ProductProfile } from './products.service.js';
 
 @ApiTags('products')
@@ -66,6 +67,47 @@ export class ProductsController {
   @ApiOperation({ summary: 'Create product' })
   create(@Body() dto: CreateProductDto): Promise<ProductProfile> {
     return this.productsService.create(dto);
+  }
+
+  @Post(':id/product-ingredients')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Add or update product ingredient link' })
+  upsertProductIngredient(
+    @Param('id') id: string,
+    @Body() dto: UpsertProductIngredientDto,
+  ): Promise<ProductProfile> {
+    return this.productsService.upsertProductIngredient(id, dto);
+  }
+
+  @Delete(':id/product-ingredients/:linkId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Remove product ingredient link' })
+  removeProductIngredient(
+    @Param('id') id: string,
+    @Param('linkId') linkId: string,
+  ): Promise<ProductProfile> {
+    return this.productsService.removeProductIngredient(id, linkId);
+  }
+
+  @Post(':id/ingredient-templates/:templateId/apply')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary:
+      'Merge template ingredient rows onto product (upsert by ingredient)',
+  })
+  applyIngredientTemplate(
+    @Param('id') id: string,
+    @Param('templateId') templateId: string,
+  ): Promise<ProductProfile> {
+    return this.productsService.applyIngredientTemplate(id, templateId);
   }
 
   @Get(':id')

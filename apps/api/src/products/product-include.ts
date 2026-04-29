@@ -4,4 +4,8 @@ export const PRODUCT_INCLUDE = {
   subCategory: { select: { id: true, name: true } },
   variants: { orderBy: { sortOrder: 'asc' as const } },
   allergyItems: { include: { allergyItem: true } },
+  ingredients: {
+    orderBy: { sortOrder: 'asc' as const },
+    include: { ingredient: true },
+  },
 } as const;

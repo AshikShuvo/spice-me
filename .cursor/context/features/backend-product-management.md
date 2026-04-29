@@ -14,6 +14,8 @@ Global catalog managed by **ADMIN**: categories, subcategories, allergy items, p
 - **Entry points:**
   - `apps/api/src/categories/categories.controller.ts` — `/categories`
   - `apps/api/src/allergy-items/allergy-items.controller.ts` — `/allergy-items`
+  - `apps/api/src/ingredients/ingredients.controller.ts` — `/ingredients`
+  - `apps/api/src/ingredient-templates/ingredient-templates.controller.ts` — `/ingredient-templates`
   - `apps/api/src/products/products.controller.ts` — `/products`
   - `apps/api/src/restaurant-products/restaurant-products.controller.ts` — `/restaurants/:restaurantId/products`
   - `apps/api/src/auth/guards/optional-jwt-auth.guard.ts` — optional JWT for `GET /products/:id` (admin sees unpublished)
@@ -22,11 +24,13 @@ Global catalog managed by **ADMIN**: categories, subcategories, allergy items, p
 
 | File | Role |
 |------|------|
-| `apps/api/prisma/schema.prisma` | `Category`, `SubCategory`, `AllergyItem`, `Product`, `ProductVariant`, `ProductAllergyItem`, `RestaurantProduct`, `Ingredient`, `ProductIngredient` |
+| `apps/api/prisma/schema.prisma` | `Category`, `SubCategory`, `AllergyItem`, `Product`, `ProductVariant`, `ProductAllergyItem`, `RestaurantProduct`, `Ingredient`, `ProductIngredient`, `IngredientTemplate`, `IngredientTemplateItem` |
+| `apps/api/src/ingredients/*` | Ingredient catalog CRUD |
+| `apps/api/src/ingredient-templates/*` | Ingredient template CRUD |
 | `apps/api/src/common/prisma-error.util.ts` | Shared `isPrismaUniqueViolation` + `uniqueConstraintFieldsFromMeta` (used by all 4 services) |
 | `apps/api/src/categories/*` | Category + subcategory CRUD |
 | `apps/api/src/allergy-items/*` | Allergy catalog CRUD |
-| `apps/api/src/products/*` | Product CRUD, variants, allergy links, publish, soft delete |
+| `apps/api/src/products/*` | Product CRUD, variants, allergy links, optional ingredients, publish, soft delete |
 | `apps/api/src/restaurant-products/*` | Restaurant–product linking (RESTAURANT_ADMIN) |
 | `apps/api/src/app.module.ts` | Registers four modules |
 | `apps/api/src/categories/categories.service.spec.ts` | Unit tests (mocked Prisma) |
@@ -64,6 +68,24 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 | `PATCH` | `/allergy-items/:id` | ADMIN | Update |
 | `DELETE` | `/allergy-items/:id` | ADMIN | Delete (join rows cascade) |
 
+### Ingredients
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/ingredients` | public | List ingredients |
+| `POST` | `/ingredients` | ADMIN | Create |
+| `PATCH` | `/ingredients/:id` | ADMIN | Update |
+| `DELETE` | `/ingredients/:id` | ADMIN | Delete (**409** if referenced) |
+
+### Ingredient templates
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/ingredient-templates` | public | List templates with items |
+| `POST` | `/ingredient-templates` | ADMIN | Create with nested items |
+| `PATCH` | `/ingredient-templates/:id` | ADMIN | Update (replace `items` when provided) |
+| `DELETE` | `/ingredient-templates/:id` | ADMIN | Delete |
+
 ### Products
 
 | Method | Path | Auth | Description |
@@ -73,7 +95,10 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 | `POST` | `/products` | ADMIN | Create; `subCategoryId` must belong to `categoryId`; optional `isVatExclusive` |
 | `GET` | `/products/:id` | optional JWT | **ADMIN** with Bearer: any product; else **published + active** only |
 | `PATCH` | `/products/:id/publish` | ADMIN | `{ isPublished }`; cannot publish inactive product; **no variants:** requires `regularPrice`; **with active variants:** each active variant needs `regularPrice`, and **exactly one** active variant must be `isDefault` |
-| `PATCH` | `/products/:id` | ADMIN | Partial update; **400** if setting `regularPrice`/`offerPrice` while any variant row exists; optional `isVatExclusive` |
+| `PATCH` | `/products/:id` | ADMIN | Partial update; **400** if setting `regularPrice`/`offerPrice` while any variant row exists; optional `isVatExclusive`, `maxOptionalIngredients` |
+| `POST` | `/products/:id/product-ingredients` | ADMIN | Upsert `ProductIngredient` (optional extras) |
+| `DELETE` | `/products/:id/product-ingredients/:linkId` | ADMIN | Remove ingredient link |
+| `POST` | `/products/:id/ingredient-templates/:templateId/apply` | ADMIN | Merge template rows onto product (upsert) |
 | `DELETE` | `/products/:id` | ADMIN | Soft delete: `isActive: false`, `isPublished: false` |
 | `POST` | `/products/:id/variants` | ADMIN | Add variant; clears `product.regularPrice` / `offerPrice`; first variant becomes default |
 | `PATCH` | `/products/:id/variants/:variantId` | ADMIN | Update variant (incl. `isActive`, optional `isDefault`) |
@@ -81,7 +106,7 @@ Base URL: no global prefix (e.g. `http://localhost:3001`).
 | `POST` | `/products/:id/allergy-items` | ADMIN | `{ allergyItemIds: string[] }` (`skipDuplicates`) |
 | `DELETE` | `/products/:id/allergy-items/:allergyItemId` | ADMIN | Remove link |
 
-**Response shape (`ProductProfile`):** includes `isVatExclusive` and `pricing: { hasVariants, regularPrice, offerPrice, display: { regularPrice, offerPrice }, variants[] }`. If any **variant row** exists, product-level `regularPrice`/`offerPrice` in the envelope are `null`; `hasVariants` is true when there is at least one **active** variant. Each variant has `regularPrice`, optional `offerPrice`, `isActive`, `isDefault`. **`display`** is the menu-facing row: product-level prices when no active variants, otherwise the **default active variant’s** prices (fallback: first active). Money values are **strings** (decimal serialization).
+**Response shape (`ProductProfile`):** includes `maxOptionalIngredients`, `ingredientLinks`, `optionalIngredients`, `isVatExclusive` and `pricing: …` as before.
 
 **Net vs gross:** Admin and `GET /products/all` return **net** (stored) amounts. Public `GET /products`, `GET /products/:id` (non-admin), `GET /menu`, and public `GET /restaurants/:id/products` return **gross** menu prices (net × (1 + platform food VAT / 100), 2 dp) except when `isVatExclusive` is true (no VAT uplift).
 
@@ -114,7 +139,7 @@ See `apps/api/prisma/schema.prisma` for full definitions. Highlights:
 - `Product` optional `regularPrice` / `offerPrice`, `isVatExclusive` (skip food VAT on customer-facing prices); `ProductVariant` has required `regularPrice`, optional `offerPrice`, and `isDefault` (exactly one default among active variants, enforced in service).
 - `PlatformCommonSettings` singleton (`id = default`): `foodVatPercent`, `currencyCode` (defaults 0 / EUR).
 - `RestaurantProduct` unique `(restaurantId, productId)`.
-- `Ingredient` / `ProductIngredient`: schema only for future add/exclude flows (no API yet).
+- `Ingredient` / `ProductIngredient` / `IngredientTemplate` / `IngredientTemplateItem` — optional extras and reusable templates; `Product.maxOptionalIngredients` caps customer selections per line item.
 
 ## State & Data Flow
 

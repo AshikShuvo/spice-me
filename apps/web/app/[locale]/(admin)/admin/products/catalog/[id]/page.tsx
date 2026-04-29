@@ -6,6 +6,10 @@ import { notFound, redirect } from "next/navigation";
 import { ProductDetailClient } from "@/components/admin/products/catalog/product-detail-client";
 import { getAllergyItemsServer } from "@/lib/services/allergy-item-server.service";
 import { getCategoriesServer } from "@/lib/services/category-server.service";
+import {
+  getIngredientTemplatesServer,
+  getIngredientsServer,
+} from "@/lib/services/ingredient-server.service";
 import { getProductServer } from "@/lib/services/product-server.service";
 
 export function generateStaticParams() {
@@ -28,12 +32,17 @@ export default async function ProductDetailPage({ params }: Props) {
   let product;
   let categories;
   let allAllergyItems;
+  let allIngredients;
+  let allTemplates;
   try {
-    [product, categories, allAllergyItems] = await Promise.all([
-      getProductServer(id),
-      getCategoriesServer(),
-      getAllergyItemsServer(),
-    ]);
+    [product, categories, allAllergyItems, allIngredients, allTemplates] =
+      await Promise.all([
+        getProductServer(id),
+        getCategoriesServer(),
+        getAllergyItemsServer(),
+        getIngredientsServer(),
+        getIngredientTemplatesServer(),
+      ]);
   } catch {
     notFound();
   }
@@ -43,6 +52,8 @@ export default async function ProductDetailPage({ params }: Props) {
       product={product}
       categories={categories}
       allAllergyItems={allAllergyItems}
+      allIngredients={allIngredients}
+      allTemplates={allTemplates}
     />
   );
 }

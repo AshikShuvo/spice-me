@@ -78,6 +78,53 @@ export interface AllergyItemProfile {
   iconUrl: string | null;
 }
 
+export interface IngredientProfile {
+  id: string;
+  name: string;
+  description: string | null;
+  isAllergen: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IngredientTemplateItemProfile {
+  id: string;
+  templateId: string;
+  ingredientId: string;
+  extraPrice: string;
+  sortOrder: number;
+  ingredient: IngredientProfile;
+}
+
+export interface IngredientTemplateProfile {
+  id: string;
+  name: string;
+  description: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  items: IngredientTemplateItemProfile[];
+}
+
+export interface ProductIngredientLinkProfile {
+  id: string;
+  ingredientId: string;
+  name: string;
+  isDefault: boolean;
+  canExclude: boolean;
+  canAdd: boolean;
+  extraPrice: string | null;
+  sortOrder: number;
+}
+
+export interface OptionalIngredientProfile {
+  id: string;
+  ingredientId: string;
+  name: string;
+  extraPrice: string;
+  sortOrder: number;
+}
+
 export interface ProductVariantProfile {
   id: string;
   name: string;
@@ -99,6 +146,8 @@ export interface ProductProfile {
   isActive: boolean;
   /** When true, menu prices are entered amounts only (no food VAT). */
   isVatExclusive?: boolean;
+  /** Max optional extras per line; null = unlimited. */
+  maxOptionalIngredients?: number | null;
   category: { id: string; name: string };
   subCategory: { id: string; name: string } | null;
   pricing: {
@@ -113,6 +162,8 @@ export interface ProductProfile {
     variants: ProductVariantProfile[];
   };
   allergyItems: Array<{ id: string; name: string; iconUrl: string | null }>;
+  ingredientLinks: ProductIngredientLinkProfile[];
+  optionalIngredients: OptionalIngredientProfile[];
   createdAt: string;
   updatedAt: string;
 }

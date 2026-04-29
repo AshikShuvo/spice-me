@@ -29,6 +29,10 @@ const PRODUCT_INCLUDE_LITE = {
     orderBy: { sortOrder: 'asc' as const },
   },
   allergyItems: { include: { allergyItem: true } },
+  ingredients: {
+    orderBy: { sortOrder: 'asc' as const },
+    include: { ingredient: true },
+  },
 } as const;
 
 @Injectable()

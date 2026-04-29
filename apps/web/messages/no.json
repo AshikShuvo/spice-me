@@ -49,7 +49,10 @@
     "quantity_decrease": "Reduser antall",
     "quantity_increase": "Øk antall",
     "choose_variant": "Velg variant",
-    "allergies_toggle": "Allergener"
+    "allergies_toggle": "Allergener",
+    "extra_ingredients": "Ekstra ingredienser",
+    "extra_included": "Inkludert",
+    "extra_max_note": "Du kan velge opptil {max} ekstra."
   },
   "platform_settings": {
     "title": "Plattforminnstillinger",

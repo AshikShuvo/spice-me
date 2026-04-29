@@ -38,6 +38,8 @@ import { useProductService } from "@/lib/services/use-product-service";
 import type {
   AllergyItemProfile,
   CategoryProfile,
+  IngredientProfile,
+  IngredientTemplateProfile,
   ProductProfile,
   ProductVariantProfile,
   SubCategoryProfile,
@@ -53,6 +55,8 @@ interface Props {
   product: ProductProfile;
   categories: CategoryProfile[];
   allAllergyItems: AllergyItemProfile[];
+  allIngredients: IngredientProfile[];
+  allTemplates: IngredientTemplateProfile[];
 }
 
 function buildProductFormDefaults(p: ProductProfile): UpdateProductFormValues {
@@ -69,6 +73,11 @@ function buildProductFormDefaults(p: ProductProfile): UpdateProductFormValues {
       ? Number.parseFloat(p.pricing.offerPrice)
       : undefined,
     isVatExclusive: p.isVatExclusive === true,
+    maxOptionalIngredients:
+      p.maxOptionalIngredients === null ||
+      p.maxOptionalIngredients === undefined
+        ? null
+        : p.maxOptionalIngredients,
   };
 }
 
@@ -76,6 +85,8 @@ export function ProductDetailClient({
   product: initialProduct,
   categories,
   allAllergyItems,
+  allIngredients,
+  allTemplates,
 }: Props) {
   const router = useRouter();
   const productService = useProductService();
@@ -92,6 +103,11 @@ export function ProductDetailClient({
   const [publishError, setPublishError] = useState<string | null>(null);
   const [variantBusyId, setVariantBusyId] = useState<string | null>(null);
   const [allergyBusyId, setAllergyBusyId] = useState<string | null>(null);
+  const [extraBusyId, setExtraBusyId] = useState<string | null>(null);
+  const [templateApplyBusy, setTemplateApplyBusy] = useState(false);
+  const [pickIngredientId, setPickIngredientId] = useState("");
+  const [pickExtraPrice, setPickExtraPrice] = useState("");
+  const [pickTemplateId, setPickTemplateId] = useState("");
 
   const { currencyCode, formatAmount } = usePlatformCurrency();
 
@@ -209,6 +225,68 @@ export function ProductDetailClient({
   const unlinkedAllergyItems = allAllergyItems.filter(
     (a) => !product.allergyItems.find((pa) => pa.id === a.id),
   );
+
+  const ingredientLinks = product.ingredientLinks ?? [];
+  const optionalExtraRows = ingredientLinks.filter(
+    (l) => l.canAdd && l.extraPrice != null,
+  );
+
+  async function handleApplyTemplate() {
+    if (!pickTemplateId) return;
+    setTemplateApplyBusy(true);
+    try {
+      const updated = await productService.applyIngredientTemplate(
+        product.id,
+        pickTemplateId,
+      );
+      setProduct(updated);
+      form.reset(buildProductFormDefaults(updated));
+    } catch {
+      /* keep UI state */
+    } finally {
+      setTemplateApplyBusy(false);
+    }
+  }
+
+  async function handleAddExtra() {
+    if (!pickIngredientId) return;
+    const price = Number.parseFloat(pickExtraPrice);
+    if (!Number.isFinite(price) || price < 0) return;
+    setExtraBusyId("add");
+    try {
+      const updated = await productService.upsertProductIngredient(
+        product.id,
+        {
+          ingredientId: pickIngredientId,
+          extraPrice: price,
+          canAdd: true,
+          isDefault: false,
+          canExclude: false,
+        },
+      );
+      setProduct(updated);
+      form.reset(buildProductFormDefaults(updated));
+      setPickIngredientId("");
+      setPickExtraPrice("");
+    } finally {
+      setExtraBusyId(null);
+    }
+  }
+
+  async function handleRemoveExtraLink(linkId: string) {
+    if (!confirm("Remove this extra from the product?")) return;
+    setExtraBusyId(linkId);
+    try {
+      const updated = await productService.removeProductIngredient(
+        product.id,
+        linkId,
+      );
+      setProduct(updated);
+      form.reset(buildProductFormDefaults(updated));
+    } finally {
+      setExtraBusyId(null);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -463,6 +541,39 @@ export function ProductDetailClient({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="maxOptionalIngredients"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Max optional extras (per line)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="No limit"
+                      autoComplete="off"
+                      value={
+                        field.value === null || field.value === undefined
+                          ? ""
+                          : field.value
+                      }
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        field.onChange(
+                          v === "" ? null : parseInt(v, 10),
+                        );
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-caption">
+                    Leave empty for no cap. Customers cannot tick more than this
+                    many extras per item line.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             {form.formState.errors.root && (
               <p className="text-body text-destructive" role="alert">
                 {form.formState.errors.root.message}
@@ -592,6 +703,139 @@ export function ProductDetailClient({
             productId={product.id}
             onVariantAdded={setProduct}
           />
+        )}
+      </div>
+
+      {/* Optional extras */}
+      <div className="rounded-md border border-coal-20 bg-white p-6">
+        <h2 className="mb-4 text-subheadline font-ringside-compressed text-coal">
+          Optional extras
+        </h2>
+        <p className="mb-4 text-caption text-neutral-30">
+          Configure paid extras for the menu. Save &quot;Max optional extras&quot;
+          in product details above to limit how many a customer can select.
+        </p>
+
+        {allTemplates.length > 0 && (
+          <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-2">
+              <label className="text-caption font-medium text-coal">
+                Apply template (merge)
+              </label>
+              <Select
+                value={pickTemplateId}
+                onValueChange={setPickTemplateId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a template…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allTemplates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              type="button"
+              disabled={!pickTemplateId || templateApplyBusy}
+              onClick={() => void handleApplyTemplate()}
+            >
+              {templateApplyBusy ? "Applying…" : "Apply template"}
+            </Button>
+          </div>
+        )}
+
+        {optionalExtraRows.length > 0 && (
+          <DataTable headers={["Ingredient", "Extra price", "Actions"]}>
+            {optionalExtraRows.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell className="font-medium text-coal">{row.name}</TableCell>
+                <TableCell className="text-body text-coal">
+                  {row.extraPrice != null ? formatAmount(row.extraPrice) : "—"}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={extraBusyId === row.id}
+                    onClick={() => void handleRemoveExtraLink(row.id)}
+                  >
+                    Remove
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </DataTable>
+        )}
+        {optionalExtraRows.length === 0 && (
+          <p className="mb-4 text-caption text-neutral-30">
+            No optional extras yet. Apply a template or add manually below.
+          </p>
+        )}
+
+        {allIngredients.length > 0 && (
+          <div className="mt-6 space-y-2 border-t border-coal-20 pt-6">
+            <p className="text-caption font-medium text-coal">Add extra manually</p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1 space-y-2">
+                <label className="text-caption text-neutral-30">Ingredient</label>
+                <Select
+                  value={pickIngredientId}
+                  onValueChange={setPickIngredientId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select ingredient…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allIngredients.map((ing) => (
+                      <SelectItem key={ing.id} value={ing.id}>
+                        {ing.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-full space-y-2 sm:w-36">
+                <label className="text-caption text-neutral-30">
+                  Extra price ({currencyCode})
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="0.00"
+                  value={pickExtraPrice}
+                  onChange={(e) => setPickExtraPrice(e.target.value)}
+                />
+              </div>
+              <Button
+                type="button"
+                disabled={
+                  !pickIngredientId ||
+                  extraBusyId === "add" ||
+                  pickExtraPrice === ""
+                }
+                onClick={() => void handleAddExtra()}
+              >
+                {extraBusyId === "add" ? "Adding…" : "Add extra"}
+              </Button>
+            </div>
+          </div>
+        )}
+        {allIngredients.length === 0 && (
+          <p className="mt-4 text-caption text-neutral-30">
+            <Link
+              href="/admin/products/ingredients"
+              className="underline hover:text-coal"
+            >
+              Create ingredients
+            </Link>{" "}
+            in the catalog first.
+          </p>
         )}
       </div>
 

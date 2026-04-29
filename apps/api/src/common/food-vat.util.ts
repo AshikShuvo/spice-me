@@ -1,5 +1,7 @@
 import { Decimal } from '@prisma/client/runtime/client';
 import type {
+  OptionalIngredientProfile,
+  ProductIngredientLinkProfile,
   ProductPriceDisplay,
   ProductProfile,
   ProductVariantProfile,
@@ -11,6 +13,26 @@ function mulPrice(
 ): string | null {
   if (s === null || s === undefined || s === '') return null;
   return new Decimal(s).mul(factor).toDecimalPlaces(2).toString();
+}
+
+function scaleOptionalIngredient(
+  o: OptionalIngredientProfile,
+  factor: Decimal,
+): OptionalIngredientProfile {
+  return {
+    ...o,
+    extraPrice: mulPrice(o.extraPrice, factor) ?? o.extraPrice,
+  };
+}
+
+function scaleIngredientLink(
+  l: ProductIngredientLinkProfile,
+  factor: Decimal,
+): ProductIngredientLinkProfile {
+  return {
+    ...l,
+    extraPrice: l.extraPrice === null ? null : mulPrice(l.extraPrice, factor),
+  };
 }
 
 function scaleVariant(
@@ -54,5 +76,11 @@ export function applyFoodVatToProfile(
       display: scaleDisplay(profile.pricing.display, factor),
       variants: profile.pricing.variants.map((v) => scaleVariant(v, factor)),
     },
+    optionalIngredients: (profile.optionalIngredients ?? []).map((o) =>
+      scaleOptionalIngredient(o, factor),
+    ),
+    ingredientLinks: (profile.ingredientLinks ?? []).map((l) =>
+      scaleIngredientLink(l, factor),
+    ),
   };
 }

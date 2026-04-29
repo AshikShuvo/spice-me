@@ -5,6 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -108,11 +109,15 @@ export function ProductDetailsModal({
   >(null);
   const [quantity, setQuantity] = React.useState(1);
   const [showAllergens, setShowAllergens] = React.useState(false);
+  const [selectedExtraIds, setSelectedExtraIds] = React.useState<Set<string>>(
+    () => new Set(),
+  );
 
   React.useEffect(() => {
     if (!product) return;
     setQuantity(1);
     setShowAllergens(false);
+    setSelectedExtraIds(new Set());
     const def = getDefaultActiveVariant(product.pricing);
     setSelectedVariantId(def?.id ?? null);
   }, [product]);
@@ -121,6 +126,34 @@ export function ProductDetailsModal({
     if (!product?.allergyItems?.length) return "";
     return product.allergyItems.map((a) => a.name).join(", ");
   }, [product]);
+
+  const optionalIngredients = product?.optionalIngredients ?? [];
+  const maxOptional = product?.maxOptionalIngredients ?? null;
+
+  const extrasTotalPerUnit = React.useMemo(() => {
+    let sum = 0;
+    for (const o of optionalIngredients) {
+      if (selectedExtraIds.has(o.id)) {
+        sum += Number.parseFloat(o.extraPrice);
+      }
+    }
+    return sum;
+  }, [optionalIngredients, selectedExtraIds]);
+
+  function toggleExtra(id: string) {
+    setSelectedExtraIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        return next;
+      }
+      if (maxOptional != null && next.size >= maxOptional) {
+        return prev;
+      }
+      next.add(id);
+      return next;
+    });
+  }
 
   const unitPrice = React.useMemo(() => {
     if (!product) return null;
@@ -132,7 +165,9 @@ export function ProductDetailsModal({
   }, [product, showVariantPicker, selectedVariantId, activeVariants]);
 
   const totalPrice =
-    unitPrice != null ? unitPrice * Math.max(1, quantity) : null;
+    unitPrice != null
+      ? (unitPrice + extrasTotalPerUnit) * Math.max(1, quantity)
+      : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -221,6 +256,60 @@ export function ProductDetailsModal({
                     </div>
                   ) : null}
 
+                  {optionalIngredients.length > 0 ? (
+                    <div className="space-y-3 border-t border-border pt-4">
+                      <p className="text-xs font-medium uppercase tracking-wide text-neutral-30">
+                        {t("extra_ingredients")}
+                      </p>
+                      {maxOptional != null ? (
+                        <p className="text-caption text-neutral-30">
+                          {t("extra_max_note", { max: maxOptional })}
+                        </p>
+                      ) : null}
+                      <div className="space-y-2">
+                        {optionalIngredients.map((o) => {
+                          const checked = selectedExtraIds.has(o.id);
+                          const atCap =
+                            maxOptional != null &&
+                            selectedExtraIds.size >= maxOptional &&
+                            !checked;
+                          return (
+                            <label
+                              key={o.id}
+                              className={cn(
+                                "flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors",
+                                checked
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border bg-background hover:border-primary/40",
+                                atCap && !checked && "cursor-not-allowed opacity-50",
+                              )}
+                            >
+                              <Checkbox
+                                checked={checked}
+                                disabled={atCap}
+                                onCheckedChange={() => toggleExtra(o.id)}
+                                className="mt-0.5"
+                              />
+                              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                <span className="font-medium text-coal">
+                                  {o.name}
+                                  {checked ? (
+                                    <span className="ml-2 text-caption font-normal text-primary">
+                                      {t("extra_included")}
+                                    </span>
+                                  ) : null}
+                                </span>
+                                <span className="text-sm tabular-nums text-neutral-30">
+                                  + {formatAmount(o.extraPrice)}
+                                </span>
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+
                   {allergenNames ? (
                     <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
                       <div className="flex shrink-0 items-center gap-2">
@@ -285,7 +374,13 @@ export function ProductDetailsModal({
                       className="w-full font-ringside-compressed text-base font-bold sm:w-auto sm:min-w-[12rem]"
                       disabled={totalPrice == null}
                       onClick={() => {
-                        console.log("button clicked");
+                        if (!product) return;
+                        console.log({
+                          productId: product.id,
+                          variantId: selectedVariantId,
+                          quantity,
+                          selectedOptionalIngredientIds: [...selectedExtraIds],
+                        });
                       }}
                     >
                       {totalPrice != null

@@ -10,6 +10,7 @@ import type {
   CreateVariantInput,
   UpdateProductInput,
   UpdateVariantInput,
+  UpsertProductIngredientInput,
 } from "@/lib/validations/product";
 
 interface ProductListQuery {
@@ -170,6 +171,47 @@ export function useProductService() {
         try {
           return await api.delete<ProductProfile>(
             `/products/${productId}/allergy-items/${allergyItemId}`,
+          );
+        } catch (e) {
+          throw normaliseError(e);
+        }
+      },
+
+      async upsertProductIngredient(
+        productId: string,
+        dto: UpsertProductIngredientInput,
+      ): Promise<ProductProfile> {
+        try {
+          return await api.post<ProductProfile>(
+            `/products/${productId}/product-ingredients`,
+            dto,
+          );
+        } catch (e) {
+          throw normaliseError(e);
+        }
+      },
+
+      async removeProductIngredient(
+        productId: string,
+        linkId: string,
+      ): Promise<ProductProfile> {
+        try {
+          return await api.delete<ProductProfile>(
+            `/products/${productId}/product-ingredients/${linkId}`,
+          );
+        } catch (e) {
+          throw normaliseError(e);
+        }
+      },
+
+      async applyIngredientTemplate(
+        productId: string,
+        templateId: string,
+      ): Promise<ProductProfile> {
+        try {
+          return await api.post<ProductProfile>(
+            `/products/${productId}/ingredient-templates/${templateId}/apply`,
+            {},
           );
         } catch (e) {
           throw normaliseError(e);

@@ -19,6 +19,8 @@ interface Props {
   recentProducts: ProductProfile[];
   totalProducts: number;
   allergyItems: AllergyItemProfile[];
+  ingredientCount: number;
+  templateCount: number;
 }
 
 export function ProductsOverviewClient({
@@ -26,6 +28,8 @@ export function ProductsOverviewClient({
   recentProducts,
   totalProducts,
   allergyItems,
+  ingredientCount,
+  templateCount,
 }: Props) {
   const activeCategories = initialCategories.filter((c) => c.isActive).length;
   const totalSubcategories = initialCategories.reduce(
@@ -58,6 +62,18 @@ export function ProductsOverviewClient({
       sub: "in reference list",
       href: "/admin/products/allergy-items",
     },
+    {
+      label: "Ingredients",
+      value: ingredientCount,
+      sub: "catalog extras",
+      href: "/admin/products/ingredients",
+    },
+    {
+      label: "Templates",
+      value: templateCount,
+      sub: "ingredient sets",
+      href: "/admin/products/ingredient-templates",
+    },
   ];
 
   return (
@@ -72,7 +88,7 @@ export function ProductsOverviewClient({
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         {stats.map((s) => (
           <Link
             key={s.label}

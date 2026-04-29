@@ -87,6 +87,12 @@ export default async function AdminLayout({
                     <AdminNavLink href="/admin/products/allergy-items">
                       Allergy Items
                     </AdminNavLink>
+                    <AdminNavLink href="/admin/products/ingredients">
+                      Ingredients
+                    </AdminNavLink>
+                    <AdminNavLink href="/admin/products/ingredient-templates">
+                      Ingredient templates
+                    </AdminNavLink>
                     <AdminNavLink href="/admin/products/catalog">Products</AdminNavLink>
                   </div>
                 ) : (

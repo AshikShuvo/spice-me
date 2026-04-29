@@ -18,6 +18,7 @@ import type { ListProductsQueryDto } from './dto/list-products-query.dto.js';
 import type { UpdateProductDto } from './dto/update-product.dto.js';
 import type { UpdateProductPublishDto } from './dto/update-product-publish.dto.js';
 import type { UpdateVariantDto } from './dto/update-variant.dto.js';
+import type { UpsertProductIngredientDto } from './dto/upsert-product-ingredient.dto.js';
 import { PRODUCT_INCLUDE } from './product-include.js';
 
 export type ProductVariantProfile = {
@@ -36,6 +37,25 @@ export type ProductPriceDisplay = {
   offerPrice: string | null;
 };
 
+export type OptionalIngredientProfile = {
+  id: string;
+  ingredientId: string;
+  name: string;
+  extraPrice: string;
+  sortOrder: number;
+};
+
+export type ProductIngredientLinkProfile = {
+  id: string;
+  ingredientId: string;
+  name: string;
+  isDefault: boolean;
+  canExclude: boolean;
+  canAdd: boolean;
+  extraPrice: string | null;
+  sortOrder: number;
+};
+
 export type ProductProfile = {
   id: string;
   title: string;
@@ -47,6 +67,8 @@ export type ProductProfile = {
   isActive: boolean;
   /** When true, customer-facing prices skip global food VAT. */
   isVatExclusive: boolean;
+  /** Null = no max cap on optional extras per line. */
+  maxOptionalIngredients: number | null;
   category: { id: string; name: string };
   subCategory: { id: string; name: string } | null;
   pricing: {
@@ -57,6 +79,10 @@ export type ProductProfile = {
     variants: ProductVariantProfile[];
   };
   allergyItems: Array<{ id: string; name: string; iconUrl: string | null }>;
+  /** Full ingredient links for admin and editing. */
+  ingredientLinks: ProductIngredientLinkProfile[];
+  /** Optional extras for menu (subset with price); same VAT rules as product when public. */
+  optionalIngredients: OptionalIngredientProfile[];
   createdAt: Date;
   updatedAt: Date;
 };
@@ -78,6 +104,7 @@ export type ProductWithRelations = {
   isPublished: boolean;
   isActive: boolean;
   isVatExclusive: boolean;
+  maxOptionalIngredients: number | null;
   regularPrice: { toString(): string } | null;
   offerPrice: { toString(): string } | null;
   createdAt: Date;
@@ -99,6 +126,17 @@ export type ProductWithRelations = {
       name: string;
       iconUrl: string | null;
     };
+  }>;
+  ingredients: Array<{
+    id: string;
+    productId: string;
+    ingredientId: string;
+    isDefault: boolean;
+    canExclude: boolean;
+    canAdd: boolean;
+    extraPrice: { toString(): string } | null;
+    sortOrder: number;
+    ingredient: { id: string; name: string };
   }>;
 };
 
@@ -189,6 +227,31 @@ export class ProductsService {
     const activeVariants = p.variants.filter((v) => v.isActive);
     const hasVariants = activeVariants.length > 0;
 
+    const ingredientLinks: ProductIngredientLinkProfile[] = (
+      p.ingredients ?? []
+    ).map((row) => ({
+      id: row.id,
+      ingredientId: row.ingredientId,
+      name: row.ingredient.name,
+      isDefault: row.isDefault,
+      canExclude: row.canExclude,
+      canAdd: row.canAdd,
+      extraPrice: decToString(row.extraPrice),
+      sortOrder: row.sortOrder,
+    }));
+
+    const optionalIngredients: OptionalIngredientProfile[] = (
+      p.ingredients ?? []
+    )
+      .filter((row) => row.canAdd && row.extraPrice != null)
+      .map((row) => ({
+        id: row.id,
+        ingredientId: row.ingredientId,
+        name: row.ingredient.name,
+        extraPrice: row.extraPrice!.toString(),
+        sortOrder: row.sortOrder,
+      }));
+
     let display: ProductPriceDisplay;
     if (hasVariants) {
       const def = activeVariants.find((v) => v.isDefault) ?? activeVariants[0];
@@ -213,6 +276,7 @@ export class ProductsService {
       isPublished: p.isPublished,
       isActive: p.isActive,
       isVatExclusive: p.isVatExclusive,
+      maxOptionalIngredients: p.maxOptionalIngredients,
       category: p.category,
       subCategory: p.subCategory,
       pricing: {
@@ -235,6 +299,8 @@ export class ProductsService {
         name: pai.allergyItem.name,
         iconUrl: pai.allergyItem.iconUrl,
       })),
+      ingredientLinks,
+      optionalIngredients,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
     };
@@ -281,6 +347,7 @@ export class ProductsService {
         isVatExclusive: dto.isVatExclusive ?? false,
         regularPrice: dto.regularPrice,
         offerPrice: dto.offerPrice,
+        maxOptionalIngredients: dto.maxOptionalIngredients ?? null,
       },
       include: PRODUCT_INCLUDE,
     });
@@ -408,6 +475,9 @@ export class ProductsService {
         ...(dto.offerPrice !== undefined && { offerPrice: dto.offerPrice }),
         ...(dto.isVatExclusive !== undefined && {
           isVatExclusive: dto.isVatExclusive,
+        }),
+        ...(dto.maxOptionalIngredients !== undefined && {
+          maxOptionalIngredients: dto.maxOptionalIngredients,
         }),
       },
       include: PRODUCT_INCLUDE,
@@ -676,6 +746,135 @@ export class ProductsService {
         productId_allergyItemId: { productId, allergyItemId },
       },
     });
+    const full = await this.prisma.product.findUniqueOrThrow({
+      where: { id: productId },
+      include: PRODUCT_INCLUDE,
+    });
+    return this.toProfile(full as ProductWithRelations);
+  }
+
+  async upsertProductIngredient(
+    productId: string,
+    dto: UpsertProductIngredientDto,
+  ): Promise<ProductProfile> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    const ing = await this.prisma.ingredient.findUnique({
+      where: { id: dto.ingredientId },
+    });
+    if (!ing) {
+      throw new BadRequestException('Invalid ingredient id');
+    }
+    const canAdd = dto.canAdd ?? true;
+    const isDefault = dto.isDefault ?? false;
+    const canExclude = dto.canExclude ?? false;
+    const sortOrder = dto.sortOrder ?? 0;
+
+    try {
+      await this.prisma.productIngredient.upsert({
+        where: {
+          productId_ingredientId: {
+            productId,
+            ingredientId: dto.ingredientId,
+          },
+        },
+        create: {
+          productId,
+          ingredientId: dto.ingredientId,
+          extraPrice: dto.extraPrice,
+          canAdd,
+          isDefault,
+          canExclude,
+          sortOrder,
+        },
+        update: {
+          extraPrice: dto.extraPrice,
+          canAdd,
+          isDefault,
+          canExclude,
+          sortOrder,
+        },
+      });
+    } catch (e) {
+      if (isPrismaUniqueViolation(e)) {
+        throw new ConflictException('Duplicate product ingredient');
+      }
+      throw e;
+    }
+    const full = await this.prisma.product.findUniqueOrThrow({
+      where: { id: productId },
+      include: PRODUCT_INCLUDE,
+    });
+    return this.toProfile(full as ProductWithRelations);
+  }
+
+  async removeProductIngredient(
+    productId: string,
+    linkId: string,
+  ): Promise<ProductProfile> {
+    const link = await this.prisma.productIngredient.findFirst({
+      where: { id: linkId, productId },
+    });
+    if (!link) {
+      throw new NotFoundException('Product ingredient link not found');
+    }
+    await this.prisma.productIngredient.delete({ where: { id: linkId } });
+    const full = await this.prisma.product.findUniqueOrThrow({
+      where: { id: productId },
+      include: PRODUCT_INCLUDE,
+    });
+    return this.toProfile(full as ProductWithRelations);
+  }
+
+  async applyIngredientTemplate(
+    productId: string,
+    templateId: string,
+  ): Promise<ProductProfile> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    const template = await this.prisma.ingredientTemplate.findUnique({
+      where: { id: templateId },
+      include: {
+        items: { orderBy: { sortOrder: 'asc' } },
+      },
+    });
+    if (!template) {
+      throw new NotFoundException('Ingredient template not found');
+    }
+    await this.prisma.$transaction(
+      template.items.map((item) =>
+        this.prisma.productIngredient.upsert({
+          where: {
+            productId_ingredientId: {
+              productId,
+              ingredientId: item.ingredientId,
+            },
+          },
+          create: {
+            productId,
+            ingredientId: item.ingredientId,
+            canAdd: true,
+            extraPrice: item.extraPrice,
+            isDefault: false,
+            canExclude: false,
+            sortOrder: item.sortOrder,
+          },
+          update: {
+            canAdd: true,
+            extraPrice: item.extraPrice,
+            sortOrder: item.sortOrder,
+          },
+        }),
+      ),
+    );
     const full = await this.prisma.product.findUniqueOrThrow({
       where: { id: productId },
       include: PRODUCT_INCLUDE,

@@ -43,6 +43,7 @@ spice-me/
 | Backend product management (categories, products, variants, allergies, restaurant products) | complete | [.cursor/context/features/backend-product-management.md](features/backend-product-management.md) |
 | Frontend product management (catalog, categories, subcategories, allergy items, restaurant products) | complete | [.cursor/context/features/frontend-product-management.md](features/frontend-product-management.md) |
 | Public menu browse (categories, subcategories, product grid) | complete | [.cursor/context/features/frontend-menu.md](features/frontend-menu.md) |
+| Product optional ingredients & templates (extras, VAT, admin + modal) | complete | [.cursor/context/features/product-optional-ingredients.md](features/product-optional-ingredients.md) |
 | Home hero (fire animation, menu CTA) | complete | [.cursor/context/features/frontend-home-hero.md](features/frontend-home-hero.md) |
 | Restaurant tables & reservations (API + admin + customer reserve) | complete | [.cursor/context/features/table-reservations.md](features/table-reservations.md) |
 | Platform common settings (global food VAT, currency, VAT-exclusive products) | complete | [.cursor/context/features/platform-common-settings.md](features/platform-common-settings.md) |
