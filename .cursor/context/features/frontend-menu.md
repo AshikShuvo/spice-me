@@ -35,7 +35,7 @@ Customer-facing **Menu** route: category row, subcategory row (including **All**
 | `apps/web/components/menu/menu-product-details-entry.tsx` | Server entry: fetch product + platform settings → `ProductDetailsRouteModal` |
 | `apps/web/components/menu/product-details-route-modal.tsx` | Client: wires `ProductDetailsModal`, `formatMenuCurrencyAmount`, `router.replace` to listing on close |
 | `apps/web/components/menu/menu-product-card.tsx` | `Link` card (image, title, description, price) |
-| `apps/web/components/menu/product-details-modal.tsx` | Radix dialog: responsive product sheet, variants, allergens toggle + list, qty, stub add-to-cart |
+| `apps/web/components/menu/product-details-modal.tsx` | Radix dialog: two-column on `md+` (left image full height, right body scrolls); mobile fixed image + scroll; variants, optional extras, allergens, qty, stub add-to-cart |
 | `apps/web/components/menu/product-price.tsx` | Price display via `Intl` + optional `formatAmount`; helpers (`resolveDisplayRow`, `getActiveVariants`, etc.); also used by admin `PricingBadge` (context currency) |
 | `apps/web/components/platform-currency/platform-currency-context.tsx` | `PlatformCurrencyProvider` + `usePlatformCurrency` (from `[locale]/layout` fetch) |
 | `apps/web/lib/money/format-currency.ts` | `formatCurrencyAmount` |

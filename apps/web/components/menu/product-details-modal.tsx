@@ -127,12 +127,13 @@ export function ProductDetailsModal({
     return product.allergyItems.map((a) => a.name).join(", ");
   }, [product]);
 
-  const optionalIngredients = product?.optionalIngredients ?? [];
+  const optionalIngredients = product?.optionalIngredients;
   const maxOptional = product?.maxOptionalIngredients ?? null;
 
   const extrasTotalPerUnit = React.useMemo(() => {
     let sum = 0;
-    for (const o of optionalIngredients) {
+    const list = optionalIngredients ?? [];
+    for (const o of list) {
       if (selectedExtraIds.has(o.id)) {
         sum += Number.parseFloat(o.extraPrice);
       }
@@ -174,7 +175,7 @@ export function ProductDetailsModal({
       {product ? (
         <DialogContent
           className={cn(
-            "flex w-full max-w-5xl flex-col gap-0 overflow-hidden p-0 md:max-h-[min(90vh,800px)]",
+            "flex min-h-0 w-full max-w-5xl flex-col gap-0 overflow-hidden p-0 md:max-h-[min(90vh,800px)]",
             // Mobile: full-viewport sheet sliding up from the bottom (native-style).
             "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:top-0 max-md:!left-0 max-md:!right-0 max-md:!top-0 max-md:!bottom-0 max-md:h-[100dvh] max-md:max-h-[100dvh] max-md:w-full max-md:max-w-none max-md:!translate-x-0 max-md:!translate-y-0 max-md:rounded-none max-md:border-x-0 max-md:border-b-0 max-md:duration-300 max-md:data-[state=closed]:slide-out-to-bottom max-md:data-[state=open]:slide-in-from-bottom max-md:data-[state=closed]:zoom-out-100 max-md:data-[state=open]:zoom-in-100",
             // Desktop: centered dialog (override default sheet positioning).
@@ -187,24 +188,23 @@ export function ProductDetailsModal({
             {product.description}
           </DialogDescription>
 
-          {/* Single scroll: image, copy, variants, and cart footer move together */}
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-            <div className="flex flex-col md:flex-row">
-              {/* Image scrolls away with content; desktop uses aspect ratio in document flow */}
-              <div className="w-full shrink-0 bg-muted md:w-1/2 md:max-w-[50%]">
-                <div className="relative h-56 min-h-[220px] w-full md:aspect-[3/4] md:h-auto md:min-h-0">
+          {/* Desktop: image fills left column height; right column scrolls. Mobile: fixed image height, body scrolls, footer pinned. */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row md:items-stretch">
+              <div className="relative flex w-full shrink-0 flex-col bg-muted max-md:w-full md:w-1/2 md:min-h-0 md:max-w-[50%] md:overflow-hidden md:self-stretch">
+                <div className="relative h-56 min-h-[220px] w-full md:min-h-0 md:flex-1">
                   {/* eslint-disable-next-line @next/next/no-img-element -- remote catalog URLs; extension-safe hydration */}
                   <img
                     src={product.imageUrl}
                     alt=""
-                    className="h-full w-full object-cover md:absolute md:inset-0 md:h-full"
+                    className="h-full w-full object-cover"
                     suppressHydrationWarning
                   />
                 </div>
               </div>
 
-              <div className="flex min-w-0 flex-1 flex-col md:w-1/2 md:max-w-[50%]">
-                <div className="space-y-4 p-6">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col md:w-1/2 md:max-w-[50%] md:overflow-hidden">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+                  <div className="space-y-4 p-6">
                   <h2 className="font-ringside-compressed text-xl font-bold leading-tight text-coal md:text-2xl">
                     {product.title}
                   </h2>
@@ -256,7 +256,7 @@ export function ProductDetailsModal({
                     </div>
                   ) : null}
 
-                  {optionalIngredients.length > 0 ? (
+                  {(optionalIngredients?.length ?? 0) > 0 ? (
                     <div className="space-y-3 border-t border-border pt-4">
                       <p className="text-xs font-medium uppercase tracking-wide text-neutral-30">
                         {t("extra_ingredients")}
@@ -267,7 +267,7 @@ export function ProductDetailsModal({
                         </p>
                       ) : null}
                       <div className="space-y-2">
-                        {optionalIngredients.map((o) => {
+                        {(optionalIngredients ?? []).map((o) => {
                           const checked = selectedExtraIds.has(o.id);
                           const atCap =
                             maxOptional != null &&
@@ -277,7 +277,7 @@ export function ProductDetailsModal({
                             <label
                               key={o.id}
                               className={cn(
-                                "flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors",
+                                "flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors",
                                 checked
                                   ? "border-primary bg-primary/5"
                                   : "border-border bg-background hover:border-primary/40",
@@ -288,18 +288,20 @@ export function ProductDetailsModal({
                                 checked={checked}
                                 disabled={atCap}
                                 onCheckedChange={() => toggleExtra(o.id)}
-                                className="mt-0.5"
+                                className="shrink-0"
                               />
-                              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                                <span className="font-medium text-coal">
-                                  {o.name}
+                              <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                                <span className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+                                  <span className="truncate font-medium text-coal">
+                                    {o.name}
+                                  </span>
                                   {checked ? (
-                                    <span className="ml-2 text-caption font-normal text-primary">
+                                    <span className="shrink-0 text-caption font-normal text-primary">
                                       {t("extra_included")}
                                     </span>
                                   ) : null}
                                 </span>
-                                <span className="text-sm tabular-nums text-neutral-30">
+                                <span className="shrink-0 text-sm tabular-nums text-neutral-30">
                                   + {formatAmount(o.extraPrice)}
                                 </span>
                               </span>
@@ -333,9 +335,10 @@ export function ProductDetailsModal({
                       ) : null}
                     </div>
                   ) : null}
+                  </div>
                 </div>
 
-                <div className="border-t border-border p-6 pt-4 max-md:pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))]">
+                <div className="shrink-0 border-t border-border p-6 pt-4 max-md:pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))]">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center justify-center gap-1 sm:justify-start">
                       <Button
@@ -391,7 +394,6 @@ export function ProductDetailsModal({
                 </div>
               </div>
             </div>
-          </div>
         </DialogContent>
       ) : null}
     </Dialog>

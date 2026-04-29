@@ -82,6 +82,7 @@ Public product/menu responses apply food VAT to `optionalIngredients` / `ingredi
 - **Merge semantics:** Applying a template **upserts** by `(productId, ingredientId)`; it does **not** delete other extras.
 - **VAT:** Extra prices follow the same gross/net rules as product prices on public endpoints.
 - **Optional extras:** Customer UI uses `optionalIngredients` only (IDs are `ProductIngredient.id`).
+- **Menu modal layout:** `product-details-modal` keeps dialog height bounded (`max-h`); the **right column scrolls** (title → extras → allergens) while **qty + Add to cart stay pinned**; on `md+` the **left column** is a **flex column** with the image in **`flex-1 min-h-0 object-cover`** so it fills the stretched half (avoid **`md:h-full` + only `absolute` children**, which can collapse to zero height).
 
 ## Dependencies
 
